@@ -1,4 +1,5 @@
 ﻿using PackageDelivery.Delivery;
+using PackageDeliveryNew.Utils;
 
 namespace PackageDelivery
 {
@@ -6,7 +7,11 @@ namespace PackageDelivery
     {
         public App()
         {
-            DBHelper.Init(@"Server=localhost;Database=PackageDelivery;User Id=packageDelivery;Password=pd;");
+            string connectionString =
+                "Server=localhost;Database=PackageDelivery;User Id=packageDelivery;Password=pd;TrustServerCertificate=True;";
+
+            DBHelper.Init(connectionString);
+            ConnectionString.Set(connectionString);
         }
     }
 }

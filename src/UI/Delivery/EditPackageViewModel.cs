@@ -1,4 +1,9 @@
-﻿using PackageDelivery.Common;
+﻿using System.Linq;
+using System.Windows;
+using FluentResults;
+using PackageDelivery.Common;
+using PackageDeliveryNew.Deliveries;
+using MessageBox = Xceed.Wpf.Toolkit.MessageBox;
 
 namespace PackageDelivery.Delivery
 {
@@ -35,14 +40,19 @@ namespace PackageDelivery.Delivery
 
         public override string Caption => "Edit Package";
         public override double Height => 410;
+        private readonly CostCalculator _costCalculator = new CostCalculator();
 
         public EditPackageViewModel(Dlvr delivery)
         {
             _delivery = delivery;
-            _product1 = _delivery.PRD_LN_1 == null ? null : DBHelper.GetProduct(_delivery.PRD_LN_1.Value);
-            _product2 = _delivery.PRD_LN_2 == null ? null : DBHelper.GetProduct(_delivery.PRD_LN_2.Value);
-            _product3 = _delivery.PRD_LN_3 == null ? null : DBHelper.GetProduct(_delivery.PRD_LN_3.Value);
-            _product4 = _delivery.PRD_LN_4 == null ? null : DBHelper.GetProduct(_delivery.PRD_LN_4.Value);
+            _product1 =
+                _delivery.PRD_LN_1 == null ? null : DBHelper.GetProduct(_delivery.PRD_LN_1.Value);
+            _product2 =
+                _delivery.PRD_LN_2 == null ? null : DBHelper.GetProduct(_delivery.PRD_LN_2.Value);
+            _product3 =
+                _delivery.PRD_LN_3 == null ? null : DBHelper.GetProduct(_delivery.PRD_LN_3.Value);
+            _product4 =
+                _delivery.PRD_LN_4 == null ? null : DBHelper.GetProduct(_delivery.PRD_LN_4.Value);
             Amount1 = _delivery.PRD_LN_1_AMN == null ? 0 : int.Parse(_delivery.PRD_LN_1_AMN);
             Amount2 = _delivery.PRD_LN_2_AMN == null ? 0 : int.Parse(_delivery.PRD_LN_2_AMN);
             Amount3 = _delivery.PRD_LN_3_AMN == null ? 0 : int.Parse(_delivery.PRD_LN_3_AMN);
@@ -51,17 +61,50 @@ namespace PackageDelivery.Delivery
 
             OkCommand = new Command(Save);
             CancelCommand = new Command(() => DialogResult = false);
-            ChangeProduct1Command = new Command(() => ChangeProduct(ref _product1, nameof(Product1Name)));
-            ChangeProduct2Command = new Command(() => ChangeProduct(ref _product2, nameof(Product2Name)));
-            ChangeProduct3Command = new Command(() => ChangeProduct(ref _product3, nameof(Product3Name)));
-            ChangeProduct4Command = new Command(() => ChangeProduct(ref _product4, nameof(Product4Name)));
+            ChangeProduct1Command = new Command(
+                () => ChangeProduct(ref _product1, nameof(Product1Name))
+            );
+            ChangeProduct2Command = new Command(
+                () => ChangeProduct(ref _product2, nameof(Product2Name))
+            );
+            ChangeProduct3Command = new Command(
+                () => ChangeProduct(ref _product3, nameof(Product3Name))
+            );
+            ChangeProduct4Command = new Command(
+                () => ChangeProduct(ref _product4, nameof(Product4Name))
+            );
             RecalculateCostCommand = new Command(RecalculateCost);
         }
 
         private void RecalculateCost()
         {
-            CostEstimate = (Amount1 + Amount2 + Amount3 + Amount4) * 40;
-            Notify(nameof(CostEstimate));
+            Result<decimal> priceCalculationResult = _costCalculator.Calculate(
+                _delivery.NMB_CLM,
+                _product1?.NMB_CM,
+                Amount1,
+                _product2?.NMB_CM,
+                Amount2,
+                _product3?.NMB_CM,
+                Amount3,
+                _product4?.NMB_CM,
+                Amount4
+            );
+
+            if (priceCalculationResult.IsFailed)
+            {
+                string caption = "Warning";
+                string message = priceCalculationResult.Reasons.Single().Message;
+                MessageBoxButton button = MessageBoxButton.OK;
+                MessageBoxImage icon = MessageBoxImage.Warning;
+
+                MessageBox.Show(message, caption, button, icon);
+            }
+            else
+            {
+                CostEstimate = (double)priceCalculationResult.Value;
+
+                Notify(nameof(CostEstimate));
+            }
         }
 
         private void ChangeProduct(ref Prdct product, string propertyToNotify)
@@ -77,7 +120,18 @@ namespace PackageDelivery.Delivery
 
         private void Save()
         {
-            DBHelper.UpdateDelivery(_delivery.NMB_CLM, _product1, Amount1, _product2, Amount2, _product3, Amount3, _product4, Amount4, CostEstimate);
+            DBHelper.UpdateDelivery(
+                _delivery.NMB_CLM,
+                _product1,
+                Amount1,
+                _product2,
+                Amount2,
+                _product3,
+                Amount3,
+                _product4,
+                Amount4,
+                CostEstimate
+            );
             DialogResult = true;
         }
     }
