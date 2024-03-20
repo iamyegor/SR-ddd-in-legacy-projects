@@ -7,11 +7,14 @@ namespace PackageDelivery
     {
         public App()
         {
-            string connectionString =
+            string legacyConnectionString =
                 "Server=localhost;Database=PackageDelivery;User Id=packageDelivery;Password=pd;TrustServerCertificate=True;";
 
-            DBHelper.Init(connectionString);
-            ConnectionString.Set(connectionString);
+            string bubbleConnectionString =
+                "Server=localhost;Database=PackageDeliveryNew;User Id=packageDelivery;Password=pd;TrustServerCertificate=True;";
+
+            DBHelper.Init(legacyConnectionString);
+            ConnectionString.Set(bubbleConnectionString);
         }
     }
 }

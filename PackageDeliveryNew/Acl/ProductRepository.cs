@@ -30,7 +30,7 @@ public class ProductRepository
         double weightInPounds =
             productFromLegacy.WT ?? productFromLegacy.WT_KG!.Value * PoundsInKilogram;
 
-        return new Product(productFromLegacy.NMB_CM, weightInPounds);
+        return null; // new Product(productFromLegacy.NMB_CM, weightInPounds);
     }
 
     private ProductFromLegacy? GetProductFromLegacyById(int id)

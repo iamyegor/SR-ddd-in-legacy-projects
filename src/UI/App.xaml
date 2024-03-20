@@ -8,6 +8,9 @@
                 <ResourceDictionary Source="Common/Common.xaml"/>
                 <ResourceDictionary Source="Delivery/DeliveryListView.xaml"/>
                 <ResourceDictionary Source="Delivery/NewDeliveryView.xaml"/>
+                <ResourceDictionary Source="DeliveryNew/ChangePackageView.xaml" />
+                <ResourceDictionary Source="DeliveryNew/ChangeProductView.xaml" />
+                <ResourceDictionary Source="DeliveryNew/AddProductLineView.xaml" />
                 <ResourceDictionary Source="Delivery/ChangeCustomerView.xaml"/>
                 <ResourceDictionary Source="Delivery/ChangeProductView.xaml"/>
                 <ResourceDictionary Source="Delivery/EditPackageView.xaml"/>

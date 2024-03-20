@@ -34,7 +34,8 @@ public class DeliveryRepository
             zipCode: (deliveryFromLegacy.ZP ?? "").Trim()
         );
 
-        return new Delivery(deliveryFromLegacy.NMB_CLM, address);
+        // return new Delivery(deliveryFromLegacy.NMB_CLM, address);
+        return null;
     }
 
     private DeliveryFromLegacy? GetDeliveryFromLegacyById(int id)

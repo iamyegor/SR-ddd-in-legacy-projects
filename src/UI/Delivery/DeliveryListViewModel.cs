@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using PackageDelivery.Common;
+using PackageDelivery.DeliveryNew;
 
 namespace PackageDelivery.Delivery
 {
@@ -8,6 +9,7 @@ namespace PackageDelivery.Delivery
         public Command RefreshCommand { get; }
         public Command NewDeliveryCommand { get; }
         public Command<Dlvr> EditPackageCommand { get; }
+        public Command<Dlvr> EditPackageNewCommand { get; }
         public Command<Dlvr> MarkAsInProgressCommand { get; }
         public IReadOnlyList<Dlvr> Deliveries { get; private set; }
 
@@ -16,7 +18,11 @@ namespace PackageDelivery.Delivery
             RefreshCommand = new Command(Refresh);
             NewDeliveryCommand = new Command(NewDelivery);
             EditPackageCommand = new Command<Dlvr>(x => x != null, EditPackage);
-            MarkAsInProgressCommand = new Command<Dlvr>(x => x != null && x.STS == "R", MarkAsInProgress);
+            MarkAsInProgressCommand = new Command<Dlvr>(
+                x => x != null && x.STS == "R",
+                MarkAsInProgress
+            );
+            EditPackageNewCommand = new Command<Dlvr>(x => x != null, EditPackageNew);
 
             Refresh();
         }
@@ -49,6 +55,14 @@ namespace PackageDelivery.Delivery
             Deliveries = DBHelper.GetAllDeliveries();
 
             Notify(nameof(Deliveries));
+        }
+
+        private void EditPackageNew(Dlvr delivery)
+        {
+            var viewModel = new ChangePackageViewModel(delivery.NMB_CLM);
+            _dialogService.ShowDialog(viewModel);
+
+            Refresh();
         }
     }
 }
