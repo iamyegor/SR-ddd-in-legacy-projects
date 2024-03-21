@@ -1,4 +1,4 @@
-﻿using ACL.Synchronizers;
+﻿using ACL.Synchronizers.Product;
 
 namespace ACL.Workers;
 
@@ -18,6 +18,7 @@ public class ProductSynchronizerWorker : BackgroundService
         {
             try
             {
+                Console.WriteLine("Start syncing products");
                 _productSynchronizer.Sync();
                 await Task.Delay(_interval, stoppingToken);
             }

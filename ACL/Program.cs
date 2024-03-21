@@ -1,8 +1,8 @@
-using ACL;
-using ACL.Synchronizers;
 using ACL.Synchronizers.Delivery;
 using ACL.Synchronizers.Delivery.FromBubbleToLegacy;
 using ACL.Synchronizers.Delivery.FromLegacyToBubble;
+using ACL.Synchronizers.Product;
+using ACL.Synchronizers.Product.FromLegacyToBubble;
 using ACL.Utils;
 using ACL.Workers;
 
@@ -21,6 +21,8 @@ builder.Services.AddSingleton<ProductSynchronizer>();
 
 builder.Services.AddSingleton<FromLegacyToBubbleDeliverySynchronizer>();
 builder.Services.AddSingleton<FromBubbleToLegacyDeliverySynchronizer>();
+
+builder.Services.AddTransient<FromLegacyToBubbleProductSynchronizer>();
 
 var host = builder.Build();
 host.Run();

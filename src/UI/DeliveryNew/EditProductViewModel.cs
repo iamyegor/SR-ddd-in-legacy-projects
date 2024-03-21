@@ -5,7 +5,7 @@ using PackageDeliveryNew.Deliveries;
 
 namespace PackageDelivery.DeliveryNew
 {
-    public class ChangeProductViewModel : ViewModel
+    public class EditProductViewModel : ViewModel
     {
         public IReadOnlyList<Product> Products { get; }
         public Product SelectedProduct { get; set; }
@@ -14,7 +14,7 @@ namespace PackageDelivery.DeliveryNew
 
         public override string Caption => "Change product";
 
-        public ChangeProductViewModel()
+        public EditProductViewModel()
         {
             Products = new ProductRepository().GetAll().ToList();
 

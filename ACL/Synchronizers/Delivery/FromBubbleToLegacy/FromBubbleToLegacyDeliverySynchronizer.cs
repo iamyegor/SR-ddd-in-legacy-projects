@@ -41,7 +41,7 @@ public class FromBubbleToLegacyDeliverySynchronizer
     {
         string query =
             @"
-                SELECT d.CostEstimate
+                SELECT *
                 FROM [dbo].[Delivery] d with (UPDLOCK)
                 WHERE d.IsSyncNeeded = 1
     
@@ -53,7 +53,7 @@ public class FromBubbleToLegacyDeliverySynchronizer
                 UPDATE [dbo].[Delivery]
                 SET IsSyncNeeded = 0
                 WHERE IsSyncNeeded = 1
-    
+                
                 UPDATE [dbo].[Synchronization]
                 SET IsSyncRequired = 0";
 
@@ -125,7 +125,7 @@ public class FromBubbleToLegacyDeliverySynchronizer
                 WHERE NMB_CLM = @NMB_CLM
                 
                 IF EXISTS (SELECT 1 FROM [dbo].[DLVR_TBL2] WHERE NMB_CLM = @NMB_CLM)
-                                     BEGIN
+                BEGIN
                     UPDATE [dbo].[DLVR_TBL2]
                     SET PRD_LN_3 = @PRD_LN_3, PRD_LN_3_AMN = @PRD_LN_3_AMN, PRD_LN_4 = @PRD_LN_4, 
                         PRD_LN_4_AMN = @PRD_LN_4_AMN

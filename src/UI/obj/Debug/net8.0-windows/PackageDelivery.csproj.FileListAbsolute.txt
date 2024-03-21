@@ -199,4 +199,4 @@ C:\Users\yyego\RiderProjects\ddd_legacy_projects\src\UI\obj\Debug\net8.0-windows
 C:\Users\yyego\RiderProjects\ddd_legacy_projects\src\UI\obj\Debug\net8.0-windows\ref\PackageDelivery.dll
 C:\Users\yyego\RiderProjects\ddd_legacy_projects\src\UI\obj\Debug\net8.0-windows\DeliveryNew\ChangePackageView.baml
 C:\Users\yyego\RiderProjects\ddd_legacy_projects\src\UI\obj\Debug\net8.0-windows\DeliveryNew\AddProductLineView.baml
-C:\Users\yyego\RiderProjects\ddd_legacy_projects\src\UI\obj\Debug\net8.0-windows\DeliveryNew\ChangeProductView.baml
+C:\Users\yyego\RiderProjects\ddd_legacy_projects\src\UI\obj\Debug\net8.0-windows\DeliveryNew\EditProductView.baml

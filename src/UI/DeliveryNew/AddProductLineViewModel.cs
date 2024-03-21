@@ -25,7 +25,7 @@ namespace PackageDelivery.DeliveryNew
 
         private void ChangeProduct()
         {
-            var viewModel = new ChangeProductViewModel();
+            var viewModel = new EditProductViewModel();
 
             if (_dialogService.ShowDialog(viewModel) == true)
             {

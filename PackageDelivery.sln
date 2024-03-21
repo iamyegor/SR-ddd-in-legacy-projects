@@ -11,6 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		src\Create_Separate_DB_For_Bubble.sql = src\Create_Separate_DB_For_Bubble.sql
 		src\SyncAclChanges_Bubble.sql = src\SyncAclChanges_Bubble.sql
 		src\SyncAclChanges_Legacy.sql = src\SyncAclChanges_Legacy.sql
+		src\Products_Sync.sql = src\Products_Sync.sql
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PackageDeliveryNew", "PackageDeliveryNew\PackageDeliveryNew.csproj", "{C1437626-F91B-4C73-B064-6B8C85276DE0}"

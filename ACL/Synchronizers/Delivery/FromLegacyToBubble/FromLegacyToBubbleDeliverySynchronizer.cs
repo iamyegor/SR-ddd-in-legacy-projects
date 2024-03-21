@@ -55,7 +55,8 @@ public class FromLegacyToBubbleDeliverySynchronizer
     {
         using (var connection = new SqlConnection(_legacyConnectionString))
         {
-            string query = "SELECT IsSyncRequired FROM [dbo].[Synchronization]";
+            string query =
+                "SELECT IsSyncRequired FROM [dbo].[Synchronization] WHERE Name = 'Delivery'";
             return connection.Query<bool>(query).Single();
         }
     }
@@ -76,7 +77,8 @@ public class FromLegacyToBubbleDeliverySynchronizer
                     WHERE IsSyncNeeded = 1
     
                     UPDATE [dbo].[Synchronization]
-                    SET IsSyncRequired = 0";
+                    SET IsSyncRequired = 0
+                    WHERE Name = 'Delivery'";
 
             return connection.Query<DeliveryInLegacy>(query).ToList();
         }

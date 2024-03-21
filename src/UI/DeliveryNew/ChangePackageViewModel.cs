@@ -29,7 +29,7 @@ namespace PackageDelivery.DeliveryNew
         {
             _deliveryRepository = new DeliveryRepository();
             _addressResolver = new AddressResolver();
-            
+
             _delivery = _deliveryRepository.GetById(deliveryId);
             if (_delivery == null)
             {
@@ -83,6 +83,7 @@ namespace PackageDelivery.DeliveryNew
             }
 
             _delivery.RecalculateEstimatedCost(distance.Value);
+            Notify(nameof(CostEstimate));
         }
     }
 }
