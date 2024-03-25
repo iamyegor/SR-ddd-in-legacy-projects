@@ -3,7 +3,7 @@ using PackageDeliveryNew.Common;
 
 namespace PackageDeliveryNew.Deliveries;
 
-public class Product : Entity
+public class Product : Entity<int>
 {
     public string Name { get; private set; }
     public double WeightInPounds { get; private set; }

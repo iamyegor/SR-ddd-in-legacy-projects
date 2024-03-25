@@ -3,16 +3,17 @@ using PackageDeliveryNew.Common;
 
 namespace PackageDeliveryNew.Deliveries;
 
-public class Delivery : Entity
+public class Delivery : Entity<int>, ISyncNeeded
 {
     private const double PricePerMilePerPound = 0.04;
     private const double NonConditionalCharge = 20;
 
     public Address Destination { get; }
     public decimal? CostEstimate { get; private set; }
-    public bool IsSyncNeeded { get; private set; }
+    public bool IsSyncNeeded { get; set; }
     public IReadOnlyList<ProductLine> ProductLines => _productLines.ToList();
     private readonly List<ProductLine> _productLines;
+    private readonly List<ProductLine> _removedProductLines = [];
 
     public Delivery(
         int id,
@@ -40,24 +41,30 @@ public class Delivery : Entity
             totalWeightInPounds * distanceInMiles * PricePerMilePerPound + NonConditionalCharge;
 
         CostEstimate = decimal.Round((decimal)estimate, 2);
-        IsSyncNeeded = true;
     }
 
     public void DeleteLine(ProductLine productLine)
     {
         _productLines.Remove(productLine);
-        IsSyncNeeded = true;
+        _removedProductLines.Add(productLine);
+    }
+
+    public IEnumerable<ProductLine> PopRemovedProductLines()
+    {
+        List<ProductLine> copy = _removedProductLines.ToList();
+
+        _removedProductLines.Clear();
+
+        return copy;
     }
 
     public void DeleteAllLines()
     {
         _productLines.Clear();
-        IsSyncNeeded = true;
     }
 
     public void AddProductLine(Product product, int amount)
     {
         _productLines.Add(new ProductLine(product, amount));
-        IsSyncNeeded = true;
     }
 }

@@ -2,18 +2,19 @@
 
 namespace PackageDeliveryNew.Common;
 
-public abstract class Entity
+public abstract class Entity<TId>
 {
-    public int Id { get; }
+    public TId Id { get; }
 
-    protected Entity(int id)
+    protected Entity(TId id)
     {
+        ArgumentNullException.ThrowIfNull(id);
         Id = id;
     }
 
     public override bool Equals(object? obj)
     {
-        Entity? other = obj as Entity;
+        Entity<TId>? other = obj as Entity<TId>;
 
         if (ReferenceEquals(other, null))
         {
@@ -30,20 +31,15 @@ public abstract class Entity
             return false;
         }
 
-        if (Id == 0 || other.Id == 0)
-        {
-            return false;
-        }
-
-        return Id == other.Id;
+        return Id!.Equals(other.Id);
     }
 
     public override int GetHashCode()
     {
-        return Id;
+        return Id!.GetHashCode();
     }
 
-    public static bool operator ==(Entity? a, Entity? b)
+    public static bool operator ==(Entity<TId>? a, Entity<TId>? b)
     {
         if (ReferenceEquals(a, null) && ReferenceEquals(b, null))
         {
@@ -58,7 +54,7 @@ public abstract class Entity
         return a.Equals(b);
     }
 
-    public static bool operator !=(Entity a, Entity b)
+    public static bool operator !=(Entity<TId> a, Entity<TId> b)
     {
         return !(a == b);
     }

@@ -47,7 +47,7 @@ namespace PackageDelivery.DeliveryNew
 
         private void UpdateDeliveryInDb()
         {
-            _deliveryRepository.Update(_delivery);
+            _deliveryRepository.SaveDelivery(_delivery);
             DialogResult = true;
         }
 

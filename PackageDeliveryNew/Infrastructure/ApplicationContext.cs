@@ -21,7 +21,8 @@ public class ApplicationContext : DbContext
             "Server=localhost;Database=PDTest;User Id=packageDelivery;Trusted_Connection=True;TrustServerCertificate=True;"
         );
 
-        optionsBuilder.AddInterceptors(new MarkIsSyncRequiredInterceptor());
+        optionsBuilder.AddInterceptors(new SyncNeededInterceptor());
+        optionsBuilder.AddInterceptors(new SoftDeleteInterceptor());
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -31,18 +32,16 @@ public class ApplicationContext : DbContext
             builder.HasKey(d => d.Id);
             builder.Property(d => d.Id).ValueGeneratedNever();
             builder.ComplexProperty(d => d.Destination);
-            builder.OwnsMany(
-                d => d.ProductLines,
-                ownsManyBuilder =>
-                {
-                    ownsManyBuilder.HasKey("Id");
-                    ownsManyBuilder.Property<int>("Id");
-                    ownsManyBuilder.ToTable("Delivery_ProductLines");
-                }
-            );
+            builder.HasMany(d => d.ProductLines);
 
             builder.Property(d => d.IsSyncNeeded).HasDefaultValue(false);
             builder.ToTable("Deliveries");
+        });
+
+        modelBuilder.Entity<ProductLine>(builder =>
+        {
+            builder.HasKey(pl => pl.Id);
+            builder.HasQueryFilter(pl => pl.IsDeleted == false);
         });
 
         modelBuilder.Entity<Product>(builder =>

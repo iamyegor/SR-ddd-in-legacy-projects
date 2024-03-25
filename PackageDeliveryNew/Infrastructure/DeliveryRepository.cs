@@ -17,7 +17,7 @@ public class DeliveryRepository
         }
     }
 
-    public void Update(Delivery delivery)
+    public void SaveDelivery(Delivery delivery)
     {
         using (var context = new ApplicationContext())
         {
@@ -39,6 +39,17 @@ public class DeliveryRepository
                     }
                 }
             );
+            
+            List<Guid> removedProductLinesIds = delivery
+                .PopRemovedProductLines()
+                .Select(pl => pl.Id)
+                .ToList();
+
+            List<ProductLine> productLinesFromDb = context
+                .ProductLines.Where(pl => removedProductLinesIds.Contains(pl.Id))
+                .ToList();
+
+            context.ProductLines.RemoveRange(productLinesFromDb);
 
             context.SaveChanges();
         }

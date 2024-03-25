@@ -47,8 +47,11 @@ public class FromBubbleToLegacyDeliverySynchronizer
     
             SELECT pl.*
             FROM [dbo].[Deliveries] d 
-            INNER JOIN dbo.Delivery_ProductLines pl on d.Id = pl.DeliveryId
+            INNER JOIN dbo.ProductLines pl on d.Id = pl.DeliveryId
             WHERE d.IsSyncNeeded = 1
+            
+            DELETE FROM [dbo].[ProductLines]
+            WHERE IsDeleted = 1
 
             UPDATE [dbo].[Deliveries]
             SET IsSyncNeeded = 0
@@ -87,26 +90,38 @@ public class FromBubbleToLegacyDeliverySynchronizer
             };
             if (deliveryFromBubble.ProductLines.Count > 0)
             {
-                legacyDelivery.PRD_LN_1 = deliveryFromBubble.ProductLines[0].ProductId;
-                legacyDelivery.PRD_LN_1_AMN = deliveryFromBubble.ProductLines[0].Amount.ToString();
+                ProductLineInBubble productLine = deliveryFromBubble.ProductLines[0];
+                bool isDeleted = productLine.IsDeleted;
+
+                legacyDelivery.PRD_LN_1 = isDeleted ? null : productLine.ProductId;
+                legacyDelivery.PRD_LN_1_AMN = isDeleted ? null : productLine.Amount.ToString();
             }
 
             if (deliveryFromBubble.ProductLines.Count > 1)
             {
-                legacyDelivery.PRD_LN_2 = deliveryFromBubble.ProductLines[1].ProductId;
-                legacyDelivery.PRD_LN_2_AMN = deliveryFromBubble.ProductLines[1].Amount.ToString();
+                ProductLineInBubble productLine = deliveryFromBubble.ProductLines[1];
+                bool isDeleted = productLine.IsDeleted;
+
+                legacyDelivery.PRD_LN_2 = isDeleted ? null : productLine.ProductId;
+                legacyDelivery.PRD_LN_2_AMN = isDeleted ? null : productLine.Amount.ToString();
             }
 
             if (deliveryFromBubble.ProductLines.Count > 2)
             {
-                legacyDelivery.PRD_LN_3 = deliveryFromBubble.ProductLines[2].ProductId;
-                legacyDelivery.PRD_LN_3_AMN = deliveryFromBubble.ProductLines[2].Amount.ToString();
+                ProductLineInBubble productLine = deliveryFromBubble.ProductLines[2];
+                bool isDeleted = productLine.IsDeleted;
+
+                legacyDelivery.PRD_LN_3 = isDeleted ? null : productLine.ProductId;
+                legacyDelivery.PRD_LN_3_AMN = isDeleted ? null : productLine.Amount.ToString();
             }
 
             if (deliveryFromBubble.ProductLines.Count > 3)
             {
-                legacyDelivery.PRD_LN_4 = deliveryFromBubble.ProductLines[3].ProductId;
-                legacyDelivery.PRD_LN_4_AMN = deliveryFromBubble.ProductLines[3].Amount.ToString();
+                ProductLineInBubble productLine = deliveryFromBubble.ProductLines[3];
+                bool isDeleted = productLine.IsDeleted;
+
+                legacyDelivery.PRD_LN_4 = isDeleted ? null : productLine.ProductId;
+                legacyDelivery.PRD_LN_4_AMN = isDeleted ? null : productLine.Amount.ToString();
             }
 
             deliveriesToReturn.Add(legacyDelivery);
