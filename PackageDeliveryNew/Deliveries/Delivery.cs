@@ -10,6 +10,7 @@ public class Delivery : Entity
 
     public Address Destination { get; }
     public decimal? CostEstimate { get; private set; }
+    public bool IsSyncNeeded { get; private set; }
     public IReadOnlyList<ProductLine> ProductLines => _productLines.ToList();
     private readonly List<ProductLine> _productLines;
 
@@ -26,25 +27,37 @@ public class Delivery : Entity
         Destination = Guard.Against.Null(destination);
     }
 
+    private Delivery()
+        : base(0) { }
+
     public void RecalculateEstimatedCost(double distanceInMiles)
     {
         Guard.Against.NegativeOrZero(distanceInMiles);
-        Guard.Against.Zero(ProductLines.Count);
+        Guard.Against.Zero(_productLines.Count);
 
-        double totalWeightInPounds = ProductLines.Sum(x => x.Product.WeightInPounds * x.Amount);
+        double totalWeightInPounds = _productLines.Sum(x => x.Product.WeightInPounds * x.Amount);
         double estimate =
             totalWeightInPounds * distanceInMiles * PricePerMilePerPound + NonConditionalCharge;
 
         CostEstimate = decimal.Round((decimal)estimate, 2);
+        IsSyncNeeded = true;
     }
 
     public void DeleteLine(ProductLine productLine)
     {
         _productLines.Remove(productLine);
+        IsSyncNeeded = true;
+    }
+
+    public void DeleteAllLines()
+    {
+        _productLines.Clear();
+        IsSyncNeeded = true;
     }
 
     public void AddProductLine(Product product, int amount)
     {
         _productLines.Add(new ProductLine(product, amount));
+        IsSyncNeeded = true;
     }
 }

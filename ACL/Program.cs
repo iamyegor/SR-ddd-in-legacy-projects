@@ -12,7 +12,7 @@ builder.Services.AddHostedService<ProductSynchronizerWorker>();
 
 ConnectionStrings connectionStrings = new ConnectionStrings(
     "Server=localhost;Database=PackageDelivery;User Id=packageDelivery;Password=pd;TrustServerCertificate=True;",
-    "Server=localhost;Database=PackageDeliveryNew;User Id=packageDelivery;Password=pd;TrustServerCertificate=True;"
+    "Server=localhost;Database=PDTest;User Id=packageDelivery;Password=pd;TrustServerCertificate=True;"
 );
 builder.Services.AddSingleton(connectionStrings);
 

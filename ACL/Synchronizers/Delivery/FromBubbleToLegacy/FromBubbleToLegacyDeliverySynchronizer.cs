@@ -41,21 +41,21 @@ public class FromBubbleToLegacyDeliverySynchronizer
     {
         string query =
             @"
-                SELECT *
-                FROM [dbo].[Delivery] d with (UPDLOCK)
-                WHERE d.IsSyncNeeded = 1
+            SELECT *
+            FROM [dbo].[Deliveries] d with (UPDLOCK)
+            WHERE d.IsSyncNeeded = 1
     
-                SELECT pl.*
-                FROM [dbo].[Delivery] d 
-                INNER JOIN dbo.ProductLine pl on d.DeliveryID = pl.DeliveryID
-                WHERE d.IsSyncNeeded = 1
-    
-                UPDATE [dbo].[Delivery]
-                SET IsSyncNeeded = 0
-                WHERE IsSyncNeeded = 1
-                
-                UPDATE [dbo].[Synchronization]
-                SET IsSyncRequired = 0";
+            SELECT pl.*
+            FROM [dbo].[Deliveries] d 
+            INNER JOIN dbo.Delivery_ProductLines pl on d.Id = pl.DeliveryId
+            WHERE d.IsSyncNeeded = 1
+
+            UPDATE [dbo].[Deliveries]
+            SET IsSyncNeeded = 0
+            WHERE IsSyncNeeded = 1
+        
+            UPDATE [dbo].[Synchronization]
+            SET IsSyncRequired = 0";
 
         using (var connection = new SqlConnection(_bubbleConnectionString))
         {
@@ -66,7 +66,7 @@ public class FromBubbleToLegacyDeliverySynchronizer
             foreach (var delivery in deliveries)
             {
                 delivery.ProductLines = productLines
-                    .Where(pl => pl.DeliveryId == delivery.DeliveryId)
+                    .Where(pl => pl.DeliveryId == delivery.Id)
                     .ToList();
             }
 
@@ -82,7 +82,7 @@ public class FromBubbleToLegacyDeliverySynchronizer
         {
             DeliveryInLegacy legacyDelivery = new DeliveryInLegacy
             {
-                NMB_CLM = deliveryFromBubble.DeliveryId,
+                NMB_CLM = deliveryFromBubble.Id,
                 ESTM_CLM = (double)(deliveryFromBubble.CostEstimate ?? 0),
             };
             if (deliveryFromBubble.ProductLines.Count > 0)

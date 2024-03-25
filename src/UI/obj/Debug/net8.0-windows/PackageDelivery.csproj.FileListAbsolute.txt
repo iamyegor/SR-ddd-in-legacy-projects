@@ -200,3 +200,15 @@ C:\Users\yyego\RiderProjects\ddd_legacy_projects\src\UI\obj\Debug\net8.0-windows
 C:\Users\yyego\RiderProjects\ddd_legacy_projects\src\UI\obj\Debug\net8.0-windows\DeliveryNew\ChangePackageView.baml
 C:\Users\yyego\RiderProjects\ddd_legacy_projects\src\UI\obj\Debug\net8.0-windows\DeliveryNew\AddProductLineView.baml
 C:\Users\yyego\RiderProjects\ddd_legacy_projects\src\UI\obj\Debug\net8.0-windows\DeliveryNew\EditProductView.baml
+C:\Users\yyego\RiderProjects\ddd_legacy_projects\src\UI\bin\Debug\net8.0-windows\Microsoft.EntityFrameworkCore.dll
+C:\Users\yyego\RiderProjects\ddd_legacy_projects\src\UI\bin\Debug\net8.0-windows\Microsoft.EntityFrameworkCore.Abstractions.dll
+C:\Users\yyego\RiderProjects\ddd_legacy_projects\src\UI\bin\Debug\net8.0-windows\Microsoft.EntityFrameworkCore.Relational.dll
+C:\Users\yyego\RiderProjects\ddd_legacy_projects\src\UI\bin\Debug\net8.0-windows\Microsoft.EntityFrameworkCore.SqlServer.dll
+C:\Users\yyego\RiderProjects\ddd_legacy_projects\src\UI\bin\Debug\net8.0-windows\Microsoft.Extensions.Caching.Abstractions.dll
+C:\Users\yyego\RiderProjects\ddd_legacy_projects\src\UI\bin\Debug\net8.0-windows\Microsoft.Extensions.Caching.Memory.dll
+C:\Users\yyego\RiderProjects\ddd_legacy_projects\src\UI\bin\Debug\net8.0-windows\Microsoft.Extensions.Configuration.Abstractions.dll
+C:\Users\yyego\RiderProjects\ddd_legacy_projects\src\UI\bin\Debug\net8.0-windows\Microsoft.Extensions.DependencyInjection.dll
+C:\Users\yyego\RiderProjects\ddd_legacy_projects\src\UI\bin\Debug\net8.0-windows\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+C:\Users\yyego\RiderProjects\ddd_legacy_projects\src\UI\bin\Debug\net8.0-windows\Microsoft.Extensions.Logging.dll
+C:\Users\yyego\RiderProjects\ddd_legacy_projects\src\UI\bin\Debug\net8.0-windows\Microsoft.Extensions.Options.dll
+C:\Users\yyego\RiderProjects\ddd_legacy_projects\src\UI\bin\Debug\net8.0-windows\Microsoft.Extensions.Primitives.dll

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using PackageDelivery.Common;
 using PackageDelivery.Utils;
 using PackageDeliveryNew.Deliveries;
+using PackageDeliveryNew.Infrastructure;
 
 namespace PackageDelivery.DeliveryNew
 {
@@ -41,12 +42,12 @@ namespace PackageDelivery.DeliveryNew
             DeleteProductLineCommand = new Command<ProductLine>(x => x != null, DeleteProductLine);
 
             CancelCommand = new Command(() => DialogResult = false);
-            OkCommand = new Command(Save);
+            OkCommand = new Command(UpdateDeliveryInDb);
         }
 
-        private void Save()
+        private void UpdateDeliveryInDb()
         {
-            _deliveryRepository.Save(_delivery);
+            _deliveryRepository.Update(_delivery);
             DialogResult = true;
         }
 

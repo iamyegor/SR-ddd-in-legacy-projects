@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using PackageDelivery.Common;
 using PackageDeliveryNew.Deliveries;
+using PackageDeliveryNew.Infrastructure;
 
 namespace PackageDelivery.DeliveryNew
 {
@@ -16,7 +16,7 @@ namespace PackageDelivery.DeliveryNew
 
         public EditProductViewModel()
         {
-            Products = new ProductRepository().GetAll().ToList();
+            Products = new ProductRepository().GetAll();
 
             OkCommand = new Command<Product>(x => x != null, _ => DialogResult = true);
             CancelCommand = new Command(() => DialogResult = false);

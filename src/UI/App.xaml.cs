@@ -11,7 +11,7 @@ namespace PackageDelivery
                 "Server=localhost;Database=PackageDelivery;User Id=packageDelivery;Password=pd;TrustServerCertificate=True;";
 
             string bubbleConnectionString =
-                "Server=localhost;Database=PackageDeliveryNew;User Id=packageDelivery;Password=pd;TrustServerCertificate=True;";
+                "Server=localhost;Database=PDTest;User Id=packageDelivery;Password=pd;TrustServerCertificate=True;";
 
             DBHelper.Init(legacyConnectionString);
             ConnectionString.Set(bubbleConnectionString);

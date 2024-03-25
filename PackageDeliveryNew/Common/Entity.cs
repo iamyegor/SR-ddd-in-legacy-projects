@@ -8,7 +8,6 @@ public abstract class Entity
 
     protected Entity(int id)
     {
-        Guard.Against.NegativeOrZero(id);
         Id = id;
     }
 

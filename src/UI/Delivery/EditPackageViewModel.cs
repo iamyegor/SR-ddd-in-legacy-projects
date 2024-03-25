@@ -41,8 +41,7 @@ namespace PackageDelivery.Delivery
 
         public override string Caption => "Edit Package";
         public override double Height => 410;
-        private readonly CostCalculator _costCalculator = new CostCalculator();
-
+        
         public EditPackageViewModel(Dlvr delivery)
         {
             _delivery = delivery;
@@ -79,29 +78,9 @@ namespace PackageDelivery.Delivery
 
         private void RecalculateCost()
         {
-            Result<decimal> priceCalculationResult = _costCalculator.Calculate(
-                _delivery.NMB_CLM,
-                _product1?.NMB_CM,
-                Amount1,
-                _product2?.NMB_CM,
-                Amount2,
-                _product3?.NMB_CM,
-                Amount3,
-                _product4?.NMB_CM,
-                Amount4
-            );
+            CostEstimate = 15;
 
-            if (priceCalculationResult.IsFailed)
-            {
-                string message = priceCalculationResult.Reasons.Single().Message;
-                CustomMessageBox.ShowError(message);
-            }
-            else
-            {
-                CostEstimate = (double)priceCalculationResult.Value;
-
-                Notify(nameof(CostEstimate));
-            }
+            Notify(nameof(CostEstimate));
         }
 
         private void ChangeProduct(ref Prdct product, string propertyToNotify)

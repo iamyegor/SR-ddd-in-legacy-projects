@@ -88,15 +88,15 @@ public class FromLegacyToBubbleProductSynchronizer
     {
         string query =
             @"
-                UPDATE [dbo].[Product]
-                SET ProductID = @ProductId, 
+                UPDATE [dbo].[Products]
+                SET Id = @ProductId, 
                 WeightInPounds = @WeightInPounds, 
                 Name = @Name
-                WHERE ProductID = @ProductId;
+                WHERE Id = @ProductId;
     
                 IF (@@ROWCOUNT = 0)
                 BEGIN
-                    INSERT [dbo].[Product] (ProductID, WeightInPounds, Name)
+                    INSERT [dbo].[Products] (Id, WeightInPounds, Name)
                     VALUES (@ProductId, @WeightInPounds, @Name)
                 END;";
 

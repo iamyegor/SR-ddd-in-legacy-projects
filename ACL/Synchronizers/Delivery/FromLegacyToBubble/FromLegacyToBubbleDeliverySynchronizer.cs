@@ -32,17 +32,17 @@ public class FromLegacyToBubbleDeliverySynchronizer
     {
         string query =
             @"
-                UPDATE [dbo].[Delivery]
-                SET DestinationStreet = @DestinationStreet,
-                    DestinationCity = @DestinationCity,
-                    DestinationState = @DestinationState,
-                    DestinationZipCode = @DestinationZipCode
-                WHERE DeliveryID = @DeliveryID;
+                UPDATE [dbo].[Deliveries]
+                SET Destination_Street = @DestinationStreet,
+                    Destination_City = @DestinationCity,
+                    Destination_State = @DestinationState,
+                    Destination_ZipCode = @DestinationZipCode
+                WHERE Id = @Id;
     
                 IF (@@ROWCOUNT = 0)
                 BEGIN
-                    INSERT [dbo].[Delivery] (DeliveryID, DestinationStreet, DestinationCity, DestinationState, DestinationZipCode)
-                    VALUES (@DeliveryID, @DestinationStreet, @DestinationCity, @DestinationState, @DestinationZipCode)
+                    INSERT INTO [dbo].[Deliveries] (Id, Destination_Street, Destination_City, Destination_State, Destination_ZipCode)
+                    VALUES (@Id, @DestinationStreet, @DestinationCity, @DestinationState, @DestinationZipCode)
                 END;";
 
         using (var connection = new SqlConnection(_bubbleConnectionString))
@@ -100,7 +100,7 @@ public class FromLegacyToBubbleDeliverySynchronizer
 
         return new DeliveryInBubble
         {
-            DeliveryID = deliveryFromLegacy.NMB_CLM,
+            Id = deliveryFromLegacy.NMB_CLM,
             DestinationStreet = (deliveryFromLegacy.STR ?? "").Trim(),
             DestinationCity = cityAndState[0].Trim(),
             DestinationState = cityAndState[1].Trim(),
