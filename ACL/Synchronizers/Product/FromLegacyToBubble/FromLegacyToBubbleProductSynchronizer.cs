@@ -108,7 +108,16 @@ public class FromLegacyToBubbleProductSynchronizer
             UPDATE Synchronization
             SET IsSyncRequired = 0
             WHERE Name='Product' AND RowVersion = @syncVersion";
-        connection.Execute(setIsSyncRequiredToFalse, new { syncVersion }, transaction: transaction);
+        int rowsAffected = connection.Execute(
+            setIsSyncRequiredToFalse,
+            new { syncVersion },
+            transaction: transaction
+        );
+
+        if (rowsAffected == 0)
+        {
+            throw new InvalidOperationException("Sync version conflict");
+        }
 
         return productsInLegacy;
     }

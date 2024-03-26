@@ -1,6 +1,7 @@
 ﻿using ACL.Utils;
 using Dapper;
 using Microsoft.Data.SqlClient;
+using Npgsql;
 
 namespace ACL.Synchronizers.Delivery.FromLegacyToBubble;
 
@@ -22,7 +23,12 @@ public class FromLegacyToBubbleDeliverySynchronizer
             return;
         }
 
-        List<DeliveryInLegacy> deliveriesFromLegacy = GetUpdatedLegacyDeliveries();
+        List<DeliveryInLegacy>? deliveriesFromLegacy = GetUpdatedDeliveriesFromLegacy();
+        if (deliveriesFromLegacy == null)
+        {
+            return;
+        }
+
         List<DeliveryInBubble> deliveriesToSave = MapLegacyDeliveries(deliveriesFromLegacy);
 
         SaveDeliveriesInBubble(deliveriesToSave);
@@ -32,20 +38,28 @@ public class FromLegacyToBubbleDeliverySynchronizer
     {
         string query =
             @"
-                UPDATE [dbo].[Deliveries]
-                SET Destination_Street = @DestinationStreet,
-                    Destination_City = @DestinationCity,
-                    Destination_State = @DestinationState,
-                    Destination_ZipCode = @DestinationZipCode
-                WHERE Id = @Id;
-    
-                IF (@@ROWCOUNT = 0)
-                BEGIN
-                    INSERT INTO [dbo].[Deliveries] (Id, Destination_Street, Destination_City, Destination_State, Destination_ZipCode)
-                    VALUES (@Id, @DestinationStreet, @DestinationCity, @DestinationState, @DestinationZipCode)
-                END;";
+            INSERT INTO deliveries (
+	            id,
+	            destination_city,
+	            destination_state,
+	            destination_street,
+	            destination_zip_code
+	            )
+            VALUES (
+	            @Id,
+	            @DestinationStreet,
+	            @DestinationState,
+	            @DestinationStreet,
+	            @DestinationZipCode
+	            ) 
+            ON CONFLICT (id) 
+            DO UPDATE SET 
+                destination_city = EXCLUDED.destination_city,
+	            destination_state = EXCLUDED.destination_state,
+	            destination_street = EXCLUDED.destination_street,
+	            destination_zip_code = EXCLUDED.destination_zip_code";
 
-        using (var connection = new SqlConnection(_bubbleConnectionString))
+        using (var connection = new NpgsqlConnection(_bubbleConnectionString))
         {
             connection.Execute(query, deliveriesToSave);
         }
@@ -61,27 +75,79 @@ public class FromLegacyToBubbleDeliverySynchronizer
         }
     }
 
-    private List<DeliveryInLegacy> GetUpdatedLegacyDeliveries()
+    private List<DeliveryInLegacy>? GetUpdatedDeliveriesFromLegacy()
     {
         using (var connection = new SqlConnection(_legacyConnectionString))
         {
-            string query =
-                @"
-                    SELECT d.NMB_CLM, a.*
-                    FROM [dbo].[DLVR_TBL] d with (UPDLOCK)
-                    INNER JOIN [dbo].[ADDR_TBL] a on a.DLVR = d.NMB_CLM
-                    WHERE d.IsSyncNeeded = 1
-    
-                    UPDATE [dbo].[DLVR_TBL]
-                    SET IsSyncNeeded = 0
-                    WHERE IsSyncNeeded = 1
-    
-                    UPDATE [dbo].[Synchronization]
-                    SET IsSyncRequired = 0
-                    WHERE Name = 'Delivery'";
+            connection.Open();
+            using (var transaction = connection.BeginTransaction())
+            {
+                try
+                {
+                    List<DeliveryInLegacy> updatedDeliveriesFromLegacy =
+                        GetUpdatedDeliveriesFromLegacy(connection, transaction);
 
-            return connection.Query<DeliveryInLegacy>(query).ToList();
+                    transaction.Commit();
+
+                    return updatedDeliveriesFromLegacy;
+                }
+                catch (Exception)
+                {
+                    transaction.Rollback();
+                    return null;
+                }
+            }
         }
+    }
+
+    private List<DeliveryInLegacy> GetUpdatedDeliveriesFromLegacy(
+        SqlConnection connection,
+        SqlTransaction transaction
+    )
+    {
+        byte[] syncVersion = connection.QuerySingle<byte[]>(
+            "SELECT RowVersion FROM Synchronization WHERE Name = 'Delivery'",
+            transaction: transaction
+        );
+
+        string tempDeliveriesToSyncTableQuery =
+            @"
+            SELECT d.NMB_CLM, a.*
+            INTO #deliveries_to_sync
+            FROM [dbo].[DLVR_TBL] d with (UPDLOCK)
+            INNER JOIN [dbo].[ADDR_TBL] a on a.DLVR = d.NMB_CLM
+            WHERE d.IsSyncNeeded = 1";
+        connection.Execute(tempDeliveriesToSyncTableQuery, transaction: transaction);
+
+        List<DeliveryInLegacy> deliveriesFromLegacy = connection
+            .Query<DeliveryInLegacy>("SELECT * FROM #deliveries_to_sync", transaction: transaction)
+            .ToList();
+
+        string setIsSyncNeededToFalseInDeliveriesQuery =
+            @"
+            UPDATE [dbo].[DLVR_TBL]
+            SET IsSyncNeeded = 0
+            WHERE NMB_CLM IN (SELECT NMB_CLM FROM #deliveries_to_sync)";
+        connection.Execute(setIsSyncNeededToFalseInDeliveriesQuery, transaction: transaction);
+
+        string setIsSyncRequiredQuery =
+            @"
+            UPDATE [dbo].[Synchronization]
+            SET IsSyncRequired = 0
+            WHERE Name = 'Delivery' AND RowVersion = @syncVersion";
+
+        int rowsAffected = connection.Execute(
+            setIsSyncRequiredQuery,
+            new { syncVersion },
+            transaction: transaction
+        );
+
+        if (rowsAffected == 0)
+        {
+            throw new InvalidOperationException("Synch version conflict");
+        }
+
+        return deliveriesFromLegacy;
     }
 
     private List<DeliveryInBubble> MapLegacyDeliveries(List<DeliveryInLegacy> deliveriesFromLegacy)

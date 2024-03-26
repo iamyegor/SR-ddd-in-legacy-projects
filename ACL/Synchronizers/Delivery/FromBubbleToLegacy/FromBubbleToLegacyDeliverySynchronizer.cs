@@ -1,5 +1,4 @@
-﻿using System.Data;
-using ACL.Utils;
+﻿using ACL.Utils;
 using Dapper;
 using Microsoft.Data.SqlClient;
 using Npgsql;
@@ -48,6 +47,7 @@ public class FromBubbleToLegacyDeliverySynchronizer
     {
         using (var connection = new NpgsqlConnection(_bubbleConnectionString))
         {
+            connection.Open();
             using (var transaction = connection.BeginTransaction())
             {
                 try
@@ -76,30 +76,35 @@ public class FromBubbleToLegacyDeliverySynchronizer
         string versionQuery = "SELECT version_number FROM sync WHERE name = 'Delivery';";
         int currentVersion = connection.QuerySingle<int>(versionQuery, transaction: transaction);
 
-        string tempDeliveriesToSyncTableQuery =
+        string deliveryQuery =
             @"
             SELECT *
             INTO TEMP deliveries_to_sync
             FROM deliveries
-            WHERE is_sync_needed = 1
-            FOR UPDATE;";
-        connection.Execute(tempDeliveriesToSyncTableQuery, transaction: transaction);
+            WHERE is_sync_needed = true
+            FOR UPDATE;
 
-        string deliveryQuery = "SELECT * FROM deliveries_to_sync;";
+            SELECT id as Id, 
+            cost_estimate as CostEstimate 
+            FROM deliveries_to_sync;
+            ";
         List<DeliveryInBubble> deliveriesFromBubble = connection
             .Query<DeliveryInBubble>(deliveryQuery, transaction: transaction)
             .ToList();
 
-        string tempProductLinesToSyncTable =
+        string productLinesQuery =
             @"
             SELECT *
             INTO TEMP product_lines_to_sync
             FROM product_lines
-            WHERE id IN (SELECT id FROM deliveries_to_sync)
-            FOR UPDATE;";
-        connection.Execute(tempProductLinesToSyncTable, transaction: transaction);
+            WHERE delivery_id IN (SELECT id FROM deliveries_to_sync)
+            FOR UPDATE;
 
-        string productLinesQuery = "SELECT * FROM product_lines_to_sync";
+            SELECT product_id as ProductId,
+            amount as Amount,
+            delivery_id as DeliveryId,
+            is_deleted as IsDeleted
+            FROM product_lines_to_sync";
         List<ProductLineInBubble> productLinesFromBubble = connection
             .Query<ProductLineInBubble>(productLinesQuery, transaction: transaction)
             .ToList();
@@ -111,31 +116,30 @@ public class FromBubbleToLegacyDeliverySynchronizer
                 .ToList();
         }
 
-        connection.Execute(
-            "DELETE FROM product_lines WHERE id IN (SELECT id FROM product_lines_to_sync);",
-            transaction: transaction
-        );
+        string deleteProductLinesAndUpdateIsSyncNeededQuery =
+            @"
+            DELETE FROM product_lines 
+            WHERE is_deleted = TRUE AND id IN (SELECT id FROM product_lines_to_sync);
+            
+            UPDATE deliveries 
+            SET is_sync_needed = FALSE 
+            WHERE id IN (SELECT id FROM deliveries_to_sync);";
+        connection.Execute(deleteProductLinesAndUpdateIsSyncNeededQuery, transaction: transaction);
 
-        connection.Execute(
-            "UPDATE deliveries SET is_sync_needed = 0 WHERE id IN (SELECT id FROM deliveries_to_sync);",
-            transaction: transaction
-        );
-
-        string updateSyncQuery =
+        string setIsSyncRequiredToFalseQuery =
             @"
             UPDATE sync
-            SET is_sync_required = 0
+            SET is_sync_required = false
             WHERE name = 'Delivery' AND version_number = @CurrentVersion;";
-
         int rowsAffected = connection.Execute(
-            updateSyncQuery,
+            setIsSyncRequiredToFalseQuery,
             new { CurrentVersion = currentVersion },
             transaction
         );
 
         if (rowsAffected == 0)
         {
-            throw new InvalidOperationException("Sync version conflict detected");
+            throw new InvalidOperationException("Sync version conflict");
         }
 
         return deliveriesFromBubble;

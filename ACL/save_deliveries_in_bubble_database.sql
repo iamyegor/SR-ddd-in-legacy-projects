@@ -1,10 +1,10 @@
 ﻿WITH updated AS (
     UPDATE deliveries
-        SET destination_street = @DestinationStreet,
-            destination_city = @DestinationCity,
-            destination_state = @DestinationState,
-            destination_zip_code = @DestinationZipCode
-        WHERE id = @Id
+    SET destination_street = @DestinationStreet,
+        destination_city = @DestinationCity,
+        destination_state = @DestinationState,
+        destination_zip_code = @DestinationZipCode
+    WHERE id = @Id
         RETURNING id
 )
 INSERT INTO deliveries (id, destination_street, destination_city, destination_state, destination_zip_code)
