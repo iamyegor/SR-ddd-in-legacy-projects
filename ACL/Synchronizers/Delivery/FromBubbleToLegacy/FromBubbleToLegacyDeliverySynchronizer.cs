@@ -1,6 +1,8 @@
-﻿using ACL.Utils;
+﻿using System.Numerics;
+using ACL.Utils;
 using Dapper;
 using Microsoft.Data.SqlClient;
+using Npgsql;
 
 namespace ACL.Synchronizers.Delivery.FromBubbleToLegacy;
 
@@ -32,48 +34,60 @@ public class FromBubbleToLegacyDeliverySynchronizer
     {
         using (var connection = new SqlConnection(_bubbleConnectionString))
         {
-            string query = "SELECT IsSyncRequired FROM [dbo].[Synchronization]";
+            string query = "SELECT is_sync_required FROM sync";
             return connection.Query<bool>(query).Single();
         }
     }
 
     private List<DeliveryInBubble> GetUpdatedDeliveriesFromBubble()
     {
-        string query =
+        string query1 =
             @"
             SELECT *
-            FROM [dbo].[Deliveries] d with (UPDLOCK)
-            WHERE d.IsSyncNeeded = 1
+            FROM deliveries
+            WHERE is_sync_needed = 1
+            FOR UPDATE;
     
             SELECT pl.*
-            FROM [dbo].[Deliveries] d 
-            INNER JOIN dbo.ProductLines pl on d.Id = pl.DeliveryId
-            WHERE d.IsSyncNeeded = 1
-            
-            DELETE FROM [dbo].[ProductLines]
-            WHERE IsDeleted = 1
+            FROM deliveries d 
+            INNER JOIN product_lines pl on d.Id = pl.delivery_id
+            WHERE d.is_sync_needed = 1;
 
-            UPDATE [dbo].[Deliveries]
-            SET IsSyncNeeded = 0
-            WHERE IsSyncNeeded = 1
+            SELECT version
+            FROM sync
+            WHERE name = 'Delivery'";
+
+        List<DeliveryInBubble> retrievedDeliveries;
         
-            UPDATE [dbo].[Synchronization]
-            SET IsSyncRequired = 0";
-
-        using (var connection = new SqlConnection(_bubbleConnectionString))
+        using (var connection = new NpgsqlConnection(_bubbleConnectionString))
         {
-            SqlMapper.GridReader reader = connection.QueryMultiple(query);
-            List<DeliveryInBubble> deliveries = reader.Read<DeliveryInBubble>().ToList();
+            SqlMapper.GridReader reader = connection.QueryMultiple(query1);
+            retrievedDeliveries = reader.Read<DeliveryInBubble>().ToList();
             List<ProductLineInBubble> productLines = reader.Read<ProductLineInBubble>().ToList();
 
-            foreach (var delivery in deliveries)
+            foreach (var delivery in retrievedDeliveries)
             {
                 delivery.ProductLines = productLines
                     .Where(pl => pl.DeliveryId == delivery.Id)
                     .ToList();
             }
+        }
 
-            return deliveries;
+        string query2 =
+            @"
+            DELETE FROM product_lines
+            WHERE is_deleted = 1;
+        
+            UPDATE deliveries
+            SET is_sync_needed = 0
+            WHERE id = @Id AND version = @Version;
+        
+            UPDATE sync
+            SET is_sync_required = 0";
+
+        using (var connection = new NpgsqlConnection(_bubbleConnectionString))
+        {
+            connection.Execute(query2, retrievedDeliveries);
         }
     }
 

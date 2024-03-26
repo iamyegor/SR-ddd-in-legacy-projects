@@ -3,8 +3,8 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PackageDeliveryNew.Infrastructure;
 
 #nullable disable
@@ -19,22 +19,25 @@ namespace PackageDeliveryNew.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "8.0.3")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("PackageDeliveryNew.Deliveries.Delivery", b =>
                 {
                     b.Property<int>("Id")
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
                     b.Property<decimal?>("CostEstimate")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("numeric")
+                        .HasColumnName("cost_estimate");
 
                     b.Property<bool>("IsSyncNeeded")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_sync_needed");
 
                     b.ComplexProperty<Dictionary<string, object>>("Destination", "PackageDeliveryNew.Deliveries.Delivery.Destination#Address", b1 =>
                         {
@@ -42,80 +45,93 @@ namespace PackageDeliveryNew.Migrations
 
                             b1.Property<string>("City")
                                 .IsRequired()
-                                .HasColumnType("nvarchar(max)");
+                                .HasColumnType("text")
+                                .HasColumnName("destination_city");
 
                             b1.Property<string>("State")
                                 .IsRequired()
-                                .HasColumnType("nvarchar(max)");
+                                .HasColumnType("text")
+                                .HasColumnName("destination_state");
 
                             b1.Property<string>("Street")
                                 .IsRequired()
-                                .HasColumnType("nvarchar(max)");
+                                .HasColumnType("text")
+                                .HasColumnName("destination_street");
 
                             b1.Property<string>("ZipCode")
                                 .IsRequired()
-                                .HasColumnType("nvarchar(max)");
+                                .HasColumnType("text")
+                                .HasColumnName("destination_zip_code");
                         });
 
                     b.HasKey("Id");
 
-                    b.ToTable("Deliveries", (string)null);
+                    b.ToTable("deliveries", (string)null);
                 });
 
             modelBuilder.Entity("PackageDeliveryNew.Deliveries.Product", b =>
                 {
                     b.Property<int>("Id")
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
                     b.Property<double>("WeightInPounds")
-                        .HasColumnType("float");
+                        .HasColumnType("double precision")
+                        .HasColumnName("weight_in_pounds");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Products");
+                    b.ToTable("products", (string)null);
                 });
 
             modelBuilder.Entity("PackageDeliveryNew.Deliveries.ProductLine", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<int>("Amount")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("DeliveryId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("amount");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
+                    b.Property<int?>("delivery_id")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("product_id")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DeliveryId");
+                    b.HasIndex("delivery_id");
 
-                    b.HasIndex("ProductId");
+                    b.HasIndex("product_id");
 
-                    b.ToTable("ProductLines");
+                    b.ToTable("product_lines", (string)null);
                 });
 
             modelBuilder.Entity("PackageDeliveryNew.Infrastructure.Synchronization", b =>
                 {
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
                     b.Property<bool>("IsSyncRequired")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_sync_required");
 
                     b.HasKey("Name");
 
-                    b.ToTable("Synchronization");
+                    b.ToTable("sync", (string)null);
 
                     b.HasData(
                         new
@@ -129,11 +145,11 @@ namespace PackageDeliveryNew.Migrations
                 {
                     b.HasOne("PackageDeliveryNew.Deliveries.Delivery", null)
                         .WithMany("ProductLines")
-                        .HasForeignKey("DeliveryId");
+                        .HasForeignKey("delivery_id");
 
                     b.HasOne("PackageDeliveryNew.Deliveries.Product", "Product")
                         .WithMany()
-                        .HasForeignKey("ProductId")
+                        .HasForeignKey("product_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

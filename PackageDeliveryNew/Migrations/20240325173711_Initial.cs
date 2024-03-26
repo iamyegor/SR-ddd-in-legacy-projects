@@ -1,39 +1,40 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace PackageDeliveryNew.Migrations
 {
     /// <inheritdoc />
-    public partial class Recreate_all_tables_and_add_id_to_the_ProductLines : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Delivery_ProductLines",
+                name: "Deliveries",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false),
-                    CostEstimate = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    IsSyncNeeded = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
-                    Destination_City = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Destination_State = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Destination_Street = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Destination_ZipCode = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Id = table.Column<int>(type: "integer", nullable: false),
+                    CostEstimate = table.Column<decimal>(type: "numeric", nullable: true),
+                    IsSyncNeeded = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    Destination_City = table.Column<string>(type: "text", nullable: false),
+                    Destination_State = table.Column<string>(type: "text", nullable: false),
+                    Destination_Street = table.Column<string>(type: "text", nullable: false),
+                    Destination_ZipCode = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Delivery_ProductLines", x => x.Id);
+                    table.PrimaryKey("PK_Deliveries", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
                 name: "Products",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    WeightInPounds = table.Column<double>(type: "float", nullable: false)
+                    Id = table.Column<int>(type: "integer", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    WeightInPounds = table.Column<double>(type: "double precision", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -44,8 +45,8 @@ namespace PackageDeliveryNew.Migrations
                 name: "Synchronization",
                 columns: table => new
                 {
-                    Name = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    IsSyncRequired = table.Column<bool>(type: "bit", nullable: false)
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    IsSyncRequired = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -56,21 +57,20 @@ namespace PackageDeliveryNew.Migrations
                 name: "ProductLines",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ProductId = table.Column<int>(type: "int", nullable: false),
-                    Amount = table.Column<int>(type: "int", nullable: false),
-                    DeliveryId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ProductId = table.Column<int>(type: "integer", nullable: false),
+                    Amount = table.Column<int>(type: "integer", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
+                    DeliveryId = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ProductLines", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ProductLines_Delivery_ProductLines_DeliveryId",
+                        name: "FK_ProductLines_Deliveries_DeliveryId",
                         column: x => x.DeliveryId,
-                        principalTable: "Delivery_ProductLines",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalTable: "Deliveries",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_ProductLines_Products_ProductId",
                         column: x => x.ProductId,
@@ -105,7 +105,7 @@ namespace PackageDeliveryNew.Migrations
                 name: "Synchronization");
 
             migrationBuilder.DropTable(
-                name: "Delivery_ProductLines");
+                name: "Deliveries");
 
             migrationBuilder.DropTable(
                 name: "Products");

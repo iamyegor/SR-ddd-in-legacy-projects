@@ -212,3 +212,5 @@ C:\Users\yyego\RiderProjects\ddd_legacy_projects\src\UI\bin\Debug\net8.0-windows
 C:\Users\yyego\RiderProjects\ddd_legacy_projects\src\UI\bin\Debug\net8.0-windows\Microsoft.Extensions.Logging.dll
 C:\Users\yyego\RiderProjects\ddd_legacy_projects\src\UI\bin\Debug\net8.0-windows\Microsoft.Extensions.Options.dll
 C:\Users\yyego\RiderProjects\ddd_legacy_projects\src\UI\bin\Debug\net8.0-windows\Microsoft.Extensions.Primitives.dll
+C:\Users\yyego\RiderProjects\ddd_legacy_projects\src\UI\bin\Debug\net8.0-windows\Npgsql.dll
+C:\Users\yyego\RiderProjects\ddd_legacy_projects\src\UI\bin\Debug\net8.0-windows\Npgsql.EntityFrameworkCore.PostgreSQL.dll

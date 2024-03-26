@@ -3,9 +3,9 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PackageDeliveryNew.Infrastructure;
 
 #nullable disable
@@ -13,8 +13,8 @@ using PackageDeliveryNew.Infrastructure;
 namespace PackageDeliveryNew.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    [Migration("20240323175853_Recreate_tables_and_rename_Deliveries_and_Deliveries_ProductLines")]
-    partial class Recreate_tables_and_rename_Deliveries_and_Deliveries_ProductLines
+    [Migration("20240325173711_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -22,21 +22,21 @@ namespace PackageDeliveryNew.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "8.0.3")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("PackageDeliveryNew.Deliveries.Delivery", b =>
                 {
                     b.Property<int>("Id")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<decimal?>("CostEstimate")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<bool>("IsSyncNeeded")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
+                        .HasColumnType("boolean")
                         .HasDefaultValue(false);
 
                     b.ComplexProperty<Dictionary<string, object>>("Destination", "PackageDeliveryNew.Deliveries.Delivery.Destination#Address", b1 =>
@@ -45,19 +45,19 @@ namespace PackageDeliveryNew.Migrations
 
                             b1.Property<string>("City")
                                 .IsRequired()
-                                .HasColumnType("nvarchar(max)");
+                                .HasColumnType("text");
 
                             b1.Property<string>("State")
                                 .IsRequired()
-                                .HasColumnType("nvarchar(max)");
+                                .HasColumnType("text");
 
                             b1.Property<string>("Street")
                                 .IsRequired()
-                                .HasColumnType("nvarchar(max)");
+                                .HasColumnType("text");
 
                             b1.Property<string>("ZipCode")
                                 .IsRequired()
-                                .HasColumnType("nvarchar(max)");
+                                .HasColumnType("text");
                         });
 
                     b.HasKey("Id");
@@ -68,27 +68,54 @@ namespace PackageDeliveryNew.Migrations
             modelBuilder.Entity("PackageDeliveryNew.Deliveries.Product", b =>
                 {
                     b.Property<int>("Id")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<double>("WeightInPounds")
-                        .HasColumnType("float");
+                        .HasColumnType("double precision");
 
                     b.HasKey("Id");
 
                     b.ToTable("Products");
                 });
 
+            modelBuilder.Entity("PackageDeliveryNew.Deliveries.ProductLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Amount")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("DeliveryId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DeliveryId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ProductLines");
+                });
+
             modelBuilder.Entity("PackageDeliveryNew.Infrastructure.Synchronization", b =>
                 {
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsSyncRequired")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.HasKey("Name");
 
@@ -102,45 +129,23 @@ namespace PackageDeliveryNew.Migrations
                         });
                 });
 
+            modelBuilder.Entity("PackageDeliveryNew.Deliveries.ProductLine", b =>
+                {
+                    b.HasOne("PackageDeliveryNew.Deliveries.Delivery", null)
+                        .WithMany("ProductLines")
+                        .HasForeignKey("DeliveryId");
+
+                    b.HasOne("PackageDeliveryNew.Deliveries.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("PackageDeliveryNew.Deliveries.Delivery", b =>
                 {
-                    b.OwnsMany("PackageDeliveryNew.Deliveries.ProductLine", "ProductLines", b1 =>
-                        {
-                            b1.Property<int>("Id")
-                                .ValueGeneratedOnAdd()
-                                .HasColumnType("int");
-
-                            SqlServerPropertyBuilderExtensions.UseIdentityColumn(b1.Property<int>("Id"));
-
-                            b1.Property<int>("Amount")
-                                .HasColumnType("int");
-
-                            b1.Property<int>("DeliveryId")
-                                .HasColumnType("int");
-
-                            b1.Property<int>("ProductId")
-                                .HasColumnType("int");
-
-                            b1.HasKey("Id");
-
-                            b1.HasIndex("DeliveryId");
-
-                            b1.HasIndex("ProductId");
-
-                            b1.ToTable("Delivery_ProductLines", (string)null);
-
-                            b1.WithOwner()
-                                .HasForeignKey("DeliveryId");
-
-                            b1.HasOne("PackageDeliveryNew.Deliveries.Product", "Product")
-                                .WithMany()
-                                .HasForeignKey("ProductId")
-                                .OnDelete(DeleteBehavior.Cascade)
-                                .IsRequired();
-
-                            b1.Navigation("Product");
-                        });
-
                     b.Navigation("ProductLines");
                 });
 #pragma warning restore 612, 618

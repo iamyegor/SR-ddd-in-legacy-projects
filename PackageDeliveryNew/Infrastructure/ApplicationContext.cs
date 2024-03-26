@@ -1,5 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Reflection;
+using Microsoft.EntityFrameworkCore;
 using PackageDeliveryNew.Deliveries;
+using PackageDeliveryNew.Infrastructure.Configurations;
 
 namespace PackageDeliveryNew.Infrastructure;
 
@@ -17,8 +19,8 @@ public class ApplicationContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSqlServer(
-            "Server=localhost;Database=PDTest;User Id=packageDelivery;Trusted_Connection=True;TrustServerCertificate=True;"
+        optionsBuilder.UseNpgsql(
+            "Host=localhost;Port=5432;Username=postgres;Password=yegor;Database=PackageDeliveryNew"
         );
 
         optionsBuilder.AddInterceptors(new SyncNeededInterceptor());
@@ -27,35 +29,9 @@ public class ApplicationContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Delivery>(builder =>
-        {
-            builder.HasKey(d => d.Id);
-            builder.Property(d => d.Id).ValueGeneratedNever();
-            builder.ComplexProperty(d => d.Destination);
-            builder.HasMany(d => d.ProductLines);
-
-            builder.Property(d => d.IsSyncNeeded).HasDefaultValue(false);
-            builder.ToTable("Deliveries");
-        });
-
-        modelBuilder.Entity<ProductLine>(builder =>
-        {
-            builder.HasKey(pl => pl.Id);
-            builder.HasQueryFilter(pl => pl.IsDeleted == false);
-        });
-
-        modelBuilder.Entity<Product>(builder =>
-        {
-            builder.HasKey(p => p.Id);
-            builder.Property(p => p.Id).ValueGeneratedNever();
-        });
-
-        modelBuilder.Entity<Synchronization>(builder =>
-        {
-            builder.HasKey(s => s.Name);
-
-            builder.HasData(new Synchronization("Delivery"));
-        });
+        modelBuilder.ApplyConfigurationsFromAssembly(
+            Assembly.GetAssembly(typeof(IEntityConfigurationAssembly))!
+        );
     }
 }
 

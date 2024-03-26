@@ -1,10 +1,4 @@
-﻿using System.Linq;
-using System.Windows;
-using FluentResults;
-using PackageDelivery.Common;
-using PackageDelivery.Utils;
-using PackageDeliveryNew.Deliveries;
-using MessageBox = Xceed.Wpf.Toolkit.MessageBox;
+﻿using PackageDelivery.Common;
 
 namespace PackageDelivery.Delivery
 {
