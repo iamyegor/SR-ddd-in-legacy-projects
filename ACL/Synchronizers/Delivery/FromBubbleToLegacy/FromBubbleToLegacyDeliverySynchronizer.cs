@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+﻿using System.Data;
 using ACL.Utils;
 using Dapper;
 using Microsoft.Data.SqlClient;
@@ -24,7 +24,12 @@ public class FromBubbleToLegacyDeliverySynchronizer
             return;
         }
 
-        List<DeliveryInBubble> deliveriesFromBubble = GetUpdatedDeliveriesFromBubble();
+        List<DeliveryInBubble>? deliveriesFromBubble = GetUpdatedDeliveriesFromBubble();
+        if (deliveriesFromBubble == null || deliveriesFromBubble.Count == 0)
+        {
+            return;
+        }
+
         List<DeliveryInLegacy> deliveriesToSave = MapBubbleDeliveries(deliveriesFromBubble);
 
         SaveDeliveries(deliveriesToSave);
@@ -32,63 +37,108 @@ public class FromBubbleToLegacyDeliverySynchronizer
 
     private bool IsSyncNeeded()
     {
-        using (var connection = new SqlConnection(_bubbleConnectionString))
+        using (var connection = new NpgsqlConnection(_bubbleConnectionString))
         {
             string query = "SELECT is_sync_required FROM sync";
             return connection.Query<bool>(query).Single();
         }
     }
 
-    private List<DeliveryInBubble> GetUpdatedDeliveriesFromBubble()
+    private List<DeliveryInBubble>? GetUpdatedDeliveriesFromBubble()
     {
-        string query1 =
-            @"
-            SELECT *
-            FROM deliveries
-            WHERE is_sync_needed = 1
-            FOR UPDATE;
-    
-            SELECT pl.*
-            FROM deliveries d 
-            INNER JOIN product_lines pl on d.Id = pl.delivery_id
-            WHERE d.is_sync_needed = 1;
-
-            SELECT version
-            FROM sync
-            WHERE name = 'Delivery'";
-
-        List<DeliveryInBubble> retrievedDeliveries;
-        
         using (var connection = new NpgsqlConnection(_bubbleConnectionString))
         {
-            SqlMapper.GridReader reader = connection.QueryMultiple(query1);
-            retrievedDeliveries = reader.Read<DeliveryInBubble>().ToList();
-            List<ProductLineInBubble> productLines = reader.Read<ProductLineInBubble>().ToList();
-
-            foreach (var delivery in retrievedDeliveries)
+            using (var transaction = connection.BeginTransaction())
             {
-                delivery.ProductLines = productLines
-                    .Where(pl => pl.DeliveryId == delivery.Id)
-                    .ToList();
+                try
+                {
+                    List<DeliveryInBubble> updatedDeliveriesFromBubble =
+                        GetUpdatedDeliveriesFromBubble(connection, transaction);
+
+                    transaction.Commit();
+
+                    return updatedDeliveriesFromBubble;
+                }
+                catch (Exception)
+                {
+                    transaction.Rollback();
+                    return null;
+                }
             }
         }
+    }
 
-        string query2 =
+    private List<DeliveryInBubble> GetUpdatedDeliveriesFromBubble(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction
+    )
+    {
+        string versionQuery = "SELECT version_number FROM sync WHERE name = 'Delivery';";
+        int currentVersion = connection.QuerySingle<int>(versionQuery, transaction: transaction);
+
+        string tempDeliveriesToSyncTableQuery =
             @"
-            DELETE FROM product_lines
-            WHERE is_deleted = 1;
-        
-            UPDATE deliveries
-            SET is_sync_needed = 0
-            WHERE id = @Id AND version = @Version;
-        
-            UPDATE sync
-            SET is_sync_required = 0";
+            SELECT *
+            INTO TEMP deliveries_to_sync
+            FROM deliveries
+            WHERE is_sync_needed = 1
+            FOR UPDATE;";
+        connection.Execute(tempDeliveriesToSyncTableQuery, transaction: transaction);
 
-        using (var connection = new NpgsqlConnection(_bubbleConnectionString))
+        string deliveryQuery = "SELECT * FROM deliveries_to_sync;";
+        List<DeliveryInBubble> deliveriesFromBubble = connection
+            .Query<DeliveryInBubble>(deliveryQuery, transaction: transaction)
+            .ToList();
+
+        string tempProductLinesToSyncTable =
+            @"
+            SELECT *
+            INTO TEMP product_lines_to_sync
+            FROM product_lines
+            WHERE id IN (SELECT id FROM deliveries_to_sync)
+            FOR UPDATE;";
+        connection.Execute(tempProductLinesToSyncTable, transaction: transaction);
+
+        string productLinesQuery = "SELECT * FROM product_lines_to_sync";
+        List<ProductLineInBubble> productLinesFromBubble = connection
+            .Query<ProductLineInBubble>(productLinesQuery, transaction: transaction)
+            .ToList();
+
+        foreach (DeliveryInBubble delivery in deliveriesFromBubble)
         {
-            connection.Execute(query2, retrievedDeliveries);
+            delivery.ProductLines = productLinesFromBubble
+                .Where(pl => pl.DeliveryId == delivery.Id)
+                .ToList();
         }
+
+        connection.Execute(
+            "DELETE FROM product_lines WHERE id IN (SELECT id FROM product_lines_to_sync);",
+            transaction: transaction
+        );
+
+        connection.Execute(
+            "UPDATE deliveries SET is_sync_needed = 0 WHERE id IN (SELECT id FROM deliveries_to_sync);",
+            transaction: transaction
+        );
+
+        string updateSyncQuery =
+            @"
+            UPDATE sync
+            SET is_sync_required = 0
+            WHERE name = 'Delivery' AND version_number = @CurrentVersion;";
+
+        int rowsAffected = connection.Execute(
+            updateSyncQuery,
+            new { CurrentVersion = currentVersion },
+            transaction
+        );
+
+        if (rowsAffected == 0)
+        {
+            throw new InvalidOperationException("Sync version conflict detected");
+        }
+
+        return deliveriesFromBubble;
     }
 
     private List<DeliveryInLegacy> MapBubbleDeliveries(List<DeliveryInBubble> deliveriesFromBubble)

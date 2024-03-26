@@ -1,6 +1,8 @@
-﻿using ACL.Utils;
+﻿using System.Transactions;
+using ACL.Utils;
 using Dapper;
 using Microsoft.Data.SqlClient;
+using Npgsql;
 
 namespace ACL.Synchronizers.Product.FromLegacyToBubble;
 
@@ -23,7 +25,12 @@ public class FromLegacyToBubbleProductSynchronizer
             return;
         }
 
-        List<ProductInLegacy> productsFromLegacy = GetUpdatedProductsFromLegacy();
+        List<ProductInLegacy>? productsFromLegacy = GetUpdatedProductsFromLegacy();
+        if (productsFromLegacy == null)
+        {
+            return;
+        }
+
         List<ProductInBubble> mappedProductsToSave = MapLegacyProducts(productsFromLegacy);
 
         SaveProductsInBubble(mappedProductsToSave);
@@ -39,26 +46,71 @@ public class FromLegacyToBubbleProductSynchronizer
         }
     }
 
-    private List<ProductInLegacy> GetUpdatedProductsFromLegacy()
+    private List<ProductInLegacy>? GetUpdatedProductsFromLegacy()
     {
-        string query =
-            @"
-                 SELECT *
-                 FROM [dbo].[PRD_TBL] with (UPDLOCK)
-                 WHERE IsSyncNeeded = 1
-     
-                 UPDATE [dbo].[PRD_TBL]
-                 SET IsSyncNeeded = 0
-                 WHERE IsSyncNeeded = 1
-     
-                 UPDATE Synchronization
-                 SET IsSyncRequired = 0
-                 WHERE Name = 'Product'";
-
         using (var connection = new SqlConnection(_legacyConnectionString))
         {
-            return connection.Query<ProductInLegacy>(query).ToList();
+            connection.Open();
+            using (var transaction = connection.BeginTransaction())
+            {
+                try
+                {
+                    List<ProductInLegacy> updatedProductsFromLegacy = GetUpdatedProductsFromLegacy(
+                        connection,
+                        transaction
+                    );
+
+                    transaction.Commit();
+
+                    return updatedProductsFromLegacy;
+                }
+                catch (Exception)
+                {
+                    transaction.Rollback();
+                    return null;
+                }
+            }
         }
+    }
+
+    private List<ProductInLegacy> GetUpdatedProductsFromLegacy(
+        SqlConnection connection,
+        SqlTransaction transaction
+    )
+    {
+        string syncVersionQuery = "SELECT RowVersion FROM Synchronization WHERE Name = 'Product'";
+        byte[] syncVersion = connection.QuerySingle<byte[]>(
+            syncVersionQuery,
+            transaction: transaction
+        );
+
+        string tempProductsTableQuery =
+            @"
+            SELECT *
+            INTO #products_to_sync
+            FROM [dbo].[PRD_TBL] with (UPDLOCK)
+            WHERE IsSyncNeeded = 1";
+        connection.Execute(tempProductsTableQuery, transaction: transaction);
+
+        List<ProductInLegacy> productsInLegacy = connection
+            .Query<ProductInLegacy>("SELECT * FROM #products_to_sync", transaction: transaction)
+            .ToList();
+
+        string setIsSyncNeededToFalseInProduct =
+            @"
+            UPDATE [dbo].[PRD_TBL] 
+            SET IsSyncNeeded = 0 
+            WHERE NMB_CM IN (SELECT NMB_CM FROM #products_to_sync)";
+        connection.Execute(setIsSyncNeededToFalseInProduct, transaction: transaction);
+
+        string setIsSyncRequiredToFalse =
+            @"
+            UPDATE Synchronization
+            SET IsSyncRequired = 0
+            WHERE Name='Product' AND RowVersion = @syncVersion";
+        connection.Execute(setIsSyncRequiredToFalse, new { syncVersion }, transaction: transaction);
+
+        return productsInLegacy;
     }
 
     private List<ProductInBubble> MapLegacyProducts(List<ProductInLegacy> productsFromLegacy)
@@ -88,19 +140,18 @@ public class FromLegacyToBubbleProductSynchronizer
     {
         string query =
             @"
-                UPDATE [dbo].[Products]
-                SET Id = @ProductId, 
-                WeightInPounds = @WeightInPounds, 
-                Name = @Name
-                WHERE Id = @ProductId;
-    
-                IF (@@ROWCOUNT = 0)
-                BEGIN
-                    INSERT [dbo].[Products] (Id, WeightInPounds, Name)
-                    VALUES (@ProductId, @WeightInPounds, @Name)
-                END;";
+            WITH updated AS (
+                UPDATE products
+                SET weight_in_pounds = @WeightInPounds, 
+                    name = @Name
+                WHERE id = @ProductId
+                RETURNING *
+            )
+            INSERT INTO products (id, weight_in_pounds, name)
+            SELECT @ProductId, @WeightInPounds, @Name
+            WHERE NOT EXISTS (SELECT 1 FROM updated);";
 
-        using (var connection = new SqlConnection(_bubbleConnectionString))
+        using (var connection = new NpgsqlConnection(_bubbleConnectionString))
         {
             connection.Execute(query, productsToSave);
         }

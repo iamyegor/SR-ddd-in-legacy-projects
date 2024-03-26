@@ -12,8 +12,9 @@ builder.Services.AddHostedService<ProductSynchronizerWorker>();
 
 ConnectionStrings connectionStrings = new ConnectionStrings(
     "Server=localhost;Database=PackageDelivery;User Id=packageDelivery;Password=pd;TrustServerCertificate=True;",
-    "Server=localhost;Database=PDTest;User Id=packageDelivery;Password=pd;TrustServerCertificate=True;"
+    "Host=localhost;Port=5432;Username=postgres;Password=yegor;Database=PackageDeliveryNew"
 );
+
 builder.Services.AddSingleton(connectionStrings);
 
 builder.Services.AddSingleton<DeliverySynchronizer>();

@@ -20,7 +20,8 @@ public class DeliverySynchronizerWorker : BackgroundService
             try
             {
                 Console.WriteLine("Start syncing deliveries");
-                _deliverySynchronizer.Sync();
+                // _deliverySynchronizer.Sync();
+
                 await Task.Delay(_interval, stoppingToken);
             }
             catch (TaskCanceledException) { }
