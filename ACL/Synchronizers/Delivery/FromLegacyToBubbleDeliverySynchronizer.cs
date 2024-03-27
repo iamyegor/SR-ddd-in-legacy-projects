@@ -1,21 +1,13 @@
-﻿using ACL.Utils;
+﻿using ACL.ConnectionStrings;
+using ACL.Synchronizers.Delivery.Models;
 using Dapper;
 using Microsoft.Data.SqlClient;
-using Npgsql;
+using Newtonsoft.Json;
 
-namespace ACL.Synchronizers.Delivery.FromLegacyToBubble;
+namespace ACL.Synchronizers.Delivery;
 
 public class FromLegacyToBubbleDeliverySynchronizer
 {
-    private readonly string _legacyConnectionString;
-    private readonly string _bubbleConnectionString;
-
-    public FromLegacyToBubbleDeliverySynchronizer(ConnectionStrings connectionStrings)
-    {
-        _legacyConnectionString = connectionStrings.Legacy;
-        _bubbleConnectionString = connectionStrings.Bubble;
-    }
-
     public void Sync()
     {
         if (!IsSyncFromLegacyNeeded())
@@ -23,80 +15,40 @@ public class FromLegacyToBubbleDeliverySynchronizer
             return;
         }
 
-        List<DeliveryInLegacy>? deliveriesFromLegacy = GetUpdatedDeliveriesFromLegacy();
-        if (deliveriesFromLegacy == null)
-        {
-            return;
-        }
-
-        List<DeliveryInBubble> deliveriesToSave = MapLegacyDeliveries(deliveriesFromLegacy);
-
-        SaveDeliveriesInBubble(deliveriesToSave);
-    }
-
-    private void SaveDeliveriesInBubble(List<DeliveryInBubble> deliveriesToSave)
-    {
-        string query =
-            @"
-            INSERT INTO deliveries (
-	            id,
-	            destination_city,
-	            destination_state,
-	            destination_street,
-	            destination_zip_code
-	            )
-            VALUES (
-	            @Id,
-	            @DestinationStreet,
-	            @DestinationState,
-	            @DestinationStreet,
-	            @DestinationZipCode
-	            ) 
-            ON CONFLICT (id) 
-            DO UPDATE SET 
-                destination_city = EXCLUDED.destination_city,
-	            destination_state = EXCLUDED.destination_state,
-	            destination_street = EXCLUDED.destination_street,
-	            destination_zip_code = EXCLUDED.destination_zip_code";
-
-        using (var connection = new NpgsqlConnection(_bubbleConnectionString))
-        {
-            connection.Execute(query, deliveriesToSave);
-        }
-    }
-
-    private bool IsSyncFromLegacyNeeded()
-    {
-        using (var connection = new SqlConnection(_legacyConnectionString))
-        {
-            string query =
-                "SELECT IsSyncRequired FROM [dbo].[Synchronization] WHERE Name = 'Delivery'";
-            return connection.Query<bool>(query).Single();
-        }
-    }
-
-    private List<DeliveryInLegacy>? GetUpdatedDeliveriesFromLegacy()
-    {
-        using (var connection = new SqlConnection(_legacyConnectionString))
+        using (var connection = new SqlConnection(LegacyConnectionString.Value))
         {
             connection.Open();
             using (var transaction = connection.BeginTransaction())
             {
                 try
                 {
-                    List<DeliveryInLegacy> updatedDeliveriesFromLegacy =
-                        GetUpdatedDeliveriesFromLegacy(connection, transaction);
+                    List<DeliveryInLegacy> deliveriesFromLegacy = GetUpdatedDeliveriesFromLegacy(
+                        connection,
+                        transaction
+                    );
 
+                    List<DeliveryInBubble> deliveriesToSave = MapLegacyDeliveries(
+                        deliveriesFromLegacy
+                    );
+
+                    SaveDeliveriesToOutbox(deliveriesToSave, connection, transaction);
                     transaction.Commit();
-
-                    return updatedDeliveriesFromLegacy;
                 }
                 catch (Exception)
                 {
                     transaction.Rollback();
-                    return null;
                 }
             }
+        }
+    }
+
+    private bool IsSyncFromLegacyNeeded()
+    {
+        using (var connection = new SqlConnection(LegacyConnectionString.Value))
+        {
+            string query =
+                "SELECT IsSyncRequired FROM [dbo].[Synchronization] WHERE Name = 'Delivery'";
+            return connection.Query<bool>(query).Single();
         }
     }
 
@@ -172,5 +124,24 @@ public class FromLegacyToBubbleDeliverySynchronizer
             DestinationState = cityAndState[1].Trim(),
             DestinationZipCode = (deliveryFromLegacy.ZP ?? "").Trim()
         };
+    }
+
+    private void SaveDeliveriesToOutbox(
+        List<DeliveryInBubble> deliveriesInBubble,
+        SqlConnection connection,
+        SqlTransaction transaction
+    )
+    {
+        var deliveriesToSave = deliveriesInBubble.Select(d => new
+        {
+            Content = JsonConvert.SerializeObject(d)
+        });
+
+        string query =
+            @"
+                 INSERT INTO outbox (content, type)
+                 VALUES (@Content, 'Delivery')";
+
+        connection.Execute(query, deliveriesToSave, transaction: transaction);
     }
 }

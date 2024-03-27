@@ -1,4 +1,4 @@
-﻿namespace ACL.Synchronizers.Delivery.FromBubbleToLegacy;
+﻿namespace ACL.Synchronizers.Delivery.Models;
 
 public class ProductLineInBubble
 {

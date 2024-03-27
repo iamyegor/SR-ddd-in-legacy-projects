@@ -6,11 +6,16 @@ namespace ACL.Workers;
 public class DeliverySynchronizerWorker : BackgroundService
 {
     private readonly TimeSpan _interval = TimeSpan.FromSeconds(1);
-    private readonly DeliverySynchronizer _deliverySynchronizer;
+    private readonly FromLegacyToBubbleDeliverySynchronizer _fromLegacyToBubbleSynchronizer;
+    private readonly FromBubbleToLegacyDeliverySynchronizer _fromBubbleToLegacySynchronizer;
 
-    public DeliverySynchronizerWorker(DeliverySynchronizer deliverySynchronizer)
+    public DeliverySynchronizerWorker(
+        FromLegacyToBubbleDeliverySynchronizer fromLegacyToBubbleSynchronizer,
+        FromBubbleToLegacyDeliverySynchronizer fromBubbleToLegacySynchronizer
+    )
     {
-        _deliverySynchronizer = deliverySynchronizer;
+        _fromLegacyToBubbleSynchronizer = fromLegacyToBubbleSynchronizer;
+        _fromBubbleToLegacySynchronizer = fromBubbleToLegacySynchronizer;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -20,7 +25,9 @@ public class DeliverySynchronizerWorker : BackgroundService
             try
             {
                 Console.WriteLine("Start syncing deliveries");
-                _deliverySynchronizer.Sync();
+
+                _fromLegacyToBubbleSynchronizer.Sync();
+                _fromBubbleToLegacySynchronizer.Sync();
 
                 await Task.Delay(_interval, stoppingToken);
             }

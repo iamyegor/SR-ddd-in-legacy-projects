@@ -1,21 +1,14 @@
-﻿using ACL.Utils;
+﻿using System.Data;
+using ACL.ConnectionStrings;
+using ACL.Synchronizers.Delivery.Models;
 using Dapper;
-using Microsoft.Data.SqlClient;
+using Newtonsoft.Json;
 using Npgsql;
 
-namespace ACL.Synchronizers.Delivery.FromBubbleToLegacy;
+namespace ACL.Synchronizers.Delivery;
 
 public class FromBubbleToLegacyDeliverySynchronizer
 {
-    private readonly string _legacyConnectionString;
-    private readonly string _bubbleConnectionString;
-
-    public FromBubbleToLegacyDeliverySynchronizer(ConnectionStrings connectionStrings)
-    {
-        _legacyConnectionString = connectionStrings.Legacy;
-        _bubbleConnectionString = connectionStrings.Bubble;
-    }
-
     public void Sync()
     {
         if (!IsSyncNeeded())
@@ -23,48 +16,40 @@ public class FromBubbleToLegacyDeliverySynchronizer
             return;
         }
 
-        List<DeliveryInBubble>? deliveriesFromBubble = GetUpdatedDeliveriesFromBubble();
-        if (deliveriesFromBubble == null || deliveriesFromBubble.Count == 0)
-        {
-            return;
-        }
-
-        List<DeliveryInLegacy> deliveriesToSave = MapBubbleDeliveries(deliveriesFromBubble);
-
-        SaveDeliveries(deliveriesToSave);
-    }
-
-    private bool IsSyncNeeded()
-    {
-        using (var connection = new NpgsqlConnection(_bubbleConnectionString))
-        {
-            string query = "SELECT is_sync_required FROM sync";
-            return connection.Query<bool>(query).Single();
-        }
-    }
-
-    private List<DeliveryInBubble>? GetUpdatedDeliveriesFromBubble()
-    {
-        using (var connection = new NpgsqlConnection(_bubbleConnectionString))
+        using (var connection = new NpgsqlConnection(BubbleConnectionString.Value))
         {
             connection.Open();
             using (var transaction = connection.BeginTransaction())
             {
                 try
                 {
-                    List<DeliveryInBubble> updatedDeliveriesFromBubble =
-                        GetUpdatedDeliveriesFromBubble(connection, transaction);
+                    List<DeliveryInBubble> deliveriesFromBubble = GetUpdatedDeliveriesFromBubble(
+                        connection,
+                        transaction
+                    );
+
+                    List<DeliveryInLegacy> deliveriesToSave = MapBubbleDeliveries(
+                        deliveriesFromBubble
+                    );
+
+                    SaveDeliveriesToOutbox(deliveriesToSave, connection, transaction);
 
                     transaction.Commit();
-
-                    return updatedDeliveriesFromBubble;
                 }
                 catch (Exception)
                 {
                     transaction.Rollback();
-                    return null;
                 }
             }
+        }
+    }
+
+    private bool IsSyncNeeded()
+    {
+        using (var connection = new NpgsqlConnection(BubbleConnectionString.Value))
+        {
+            string query = "SELECT is_sync_required FROM sync";
+            return connection.Query<bool>(query).Single();
         }
     }
 
@@ -86,8 +71,7 @@ public class FromBubbleToLegacyDeliverySynchronizer
 
             SELECT id as Id, 
             cost_estimate as CostEstimate 
-            FROM deliveries_to_sync;
-            ";
+            FROM deliveries_to_sync;";
         List<DeliveryInBubble> deliveriesFromBubble = connection
             .Query<DeliveryInBubble>(deliveryQuery, transaction: transaction)
             .ToList();
@@ -139,7 +123,7 @@ public class FromBubbleToLegacyDeliverySynchronizer
 
         if (rowsAffected == 0)
         {
-            throw new InvalidOperationException("Sync version conflict");
+            throw new DBConcurrencyException("Sync version conflict");
         }
 
         return deliveriesFromBubble;
@@ -198,31 +182,22 @@ public class FromBubbleToLegacyDeliverySynchronizer
         return deliveriesToReturn;
     }
 
-    private void SaveDeliveries(List<DeliveryInLegacy> deliveriesToSave)
+    private void SaveDeliveriesToOutbox(
+        List<DeliveryInLegacy> deliveriesToSave,
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction
+    )
     {
+        var deliveriesJson = deliveriesToSave.Select(delivery => new
+        {
+            Content = JsonConvert.SerializeObject(delivery)
+        });
+
         string query =
             @"
-                UPDATE [dbo].[DLVR_TBL]
-                SET PRD_LN_1 = @PRD_LN_1, PRD_LN_1_AMN = @PRD_LN_1_AMN, PRD_LN_2 = @PRD_LN_2, 
-                    PRD_LN_2_AMN = @PRD_LN_2_AMN, ESTM_CLM = @ESTM_CLM, STS = 'R'
-                WHERE NMB_CLM = @NMB_CLM
-                
-                IF EXISTS (SELECT 1 FROM [dbo].[DLVR_TBL2] WHERE NMB_CLM = @NMB_CLM)
-                BEGIN
-                    UPDATE [dbo].[DLVR_TBL2]
-                    SET PRD_LN_3 = @PRD_LN_3, PRD_LN_3_AMN = @PRD_LN_3_AMN, PRD_LN_4 = @PRD_LN_4, 
-                        PRD_LN_4_AMN = @PRD_LN_4_AMN
-                    WHERE NMB_CLM = @NMB_CLM
-                END
-                ELSE
-                BEGIN
-                    INSERT [dbo].[DLVR_TBL2] (NMB_CLM, PRD_LN_3, PRD_LN_3_AMN, PRD_LN_4, PRD_LN_4_AMN)
-                    VALUES (@NMB_CLM, @PRD_LN_3, @PRD_LN_3_AMN, @PRD_LN_4, @PRD_LN_4_AMN)
-                END";
+            INSERT INTO outbox (content, type) 
+            VALUES (@Content::json, 'Delivery')";
 
-        using (var connection = new SqlConnection(_legacyConnectionString))
-        {
-            connection.Execute(query, deliveriesToSave);
-        }
+        connection.Execute(query, deliveriesJson, transaction: transaction);
     }
 }

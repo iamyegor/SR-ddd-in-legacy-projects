@@ -1,22 +1,14 @@
-﻿using System.Transactions;
-using ACL.Utils;
+﻿using ACL.ConnectionStrings;
+using ACL.Synchronizers.Product.Models;
 using Dapper;
 using Microsoft.Data.SqlClient;
-using Npgsql;
+using Newtonsoft.Json;
 
-namespace ACL.Synchronizers.Product.FromLegacyToBubble;
+namespace ACL.Synchronizers.Product;
 
 public class FromLegacyToBubbleProductSynchronizer
 {
     private const double PoundsInKilogram = 2.20462;
-    private readonly string _legacyConnectionString;
-    private readonly string _bubbleConnectionString;
-
-    public FromLegacyToBubbleProductSynchronizer(ConnectionStrings connectionStrings)
-    {
-        _legacyConnectionString = connectionStrings.Legacy;
-        _bubbleConnectionString = connectionStrings.Bubble;
-    }
 
     public void Sync()
     {
@@ -25,51 +17,39 @@ public class FromLegacyToBubbleProductSynchronizer
             return;
         }
 
-        List<ProductInLegacy>? productsFromLegacy = GetUpdatedProductsFromLegacy();
-        if (productsFromLegacy == null)
-        {
-            return;
-        }
-
-        List<ProductInBubble> mappedProductsToSave = MapLegacyProducts(productsFromLegacy);
-
-        SaveProductsInBubble(mappedProductsToSave);
-    }
-
-    private bool IsSyncNeeded()
-    {
-        using (var connection = new SqlConnection(_legacyConnectionString))
-        {
-            string query =
-                "SELECT IsSyncRequired FROM [dbo].[Synchronization] WHERE Name = 'Product'";
-            return connection.Query<bool>(query).Single();
-        }
-    }
-
-    private List<ProductInLegacy>? GetUpdatedProductsFromLegacy()
-    {
-        using (var connection = new SqlConnection(_legacyConnectionString))
+        using (var connection = new SqlConnection(LegacyConnectionString.Value))
         {
             connection.Open();
             using (var transaction = connection.BeginTransaction())
             {
                 try
                 {
-                    List<ProductInLegacy> updatedProductsFromLegacy = GetUpdatedProductsFromLegacy(
+                    List<ProductInLegacy> productsFromLegacy = GetUpdatedProductsFromLegacy(
                         connection,
                         transaction
                     );
 
-                    transaction.Commit();
+                    List<ProductInBubble> mappedProducts = MapLegacyProducts(productsFromLegacy);
 
-                    return updatedProductsFromLegacy;
+                    SaveProductsToOutbox(mappedProducts, connection, transaction);
+
+                    transaction.Commit();
                 }
                 catch (Exception)
                 {
                     transaction.Rollback();
-                    return null;
                 }
             }
+        }
+    }
+
+    private bool IsSyncNeeded()
+    {
+        using (var connection = new SqlConnection(LegacyConnectionString.Value))
+        {
+            string query =
+                "SELECT IsSyncRequired FROM [dbo].[Synchronization] WHERE Name = 'Product'";
+            return connection.Query<bool>(query).Single();
         }
     }
 
@@ -145,24 +125,22 @@ public class FromLegacyToBubbleProductSynchronizer
         };
     }
 
-    private void SaveProductsInBubble(List<ProductInBubble> productsToSave)
+    private void SaveProductsToOutbox(
+        List<ProductInBubble> productsInBubble,
+        SqlConnection connection,
+        SqlTransaction transaction
+    )
     {
+        var productsToSave = productsInBubble.Select(p => new
+        {
+            Content = JsonConvert.SerializeObject(p)
+        });
+
         string query =
             @"
-            WITH updated AS (
-                UPDATE products
-                SET weight_in_pounds = @WeightInPounds, 
-                    name = @Name
-                WHERE id = @ProductId
-                RETURNING *
-            )
-            INSERT INTO products (id, weight_in_pounds, name)
-            SELECT @ProductId, @WeightInPounds, @Name
-            WHERE NOT EXISTS (SELECT 1 FROM updated);";
+            INSERT INTO outbox (content, type) 
+            VALUES (@Content, 'Product')";
 
-        using (var connection = new NpgsqlConnection(_bubbleConnectionString))
-        {
-            connection.Execute(query, productsToSave);
-        }
+        connection.Execute(query, productsToSave, transaction: transaction);
     }
 }

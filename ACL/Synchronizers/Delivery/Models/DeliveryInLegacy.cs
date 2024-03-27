@@ -1,8 +1,11 @@
-﻿namespace ACL.Synchronizers.Delivery.FromBubbleToLegacy;
+﻿namespace ACL.Synchronizers.Delivery.Models;
 
 public class DeliveryInLegacy
 {
     public int NMB_CLM { get; set; }
+    public string? STR { get; set; }
+    public string? CT_ST { get; set; }
+    public string? ZP { get; set; }
     public double ESTM_CLM { get; set; }
     public int? PRD_LN_1 { get; set; }
     public string? PRD_LN_1_AMN { get; set; }

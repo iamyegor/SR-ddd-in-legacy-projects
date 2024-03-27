@@ -1,9 +1,10 @@
-﻿namespace ACL.Synchronizers.Delivery.FromLegacyToBubble;
+﻿namespace ACL.Synchronizers.Delivery.Models;
 
-internal class DeliveryInBubble
+public class DeliveryInBubble
 {
-    // ReSharper disable once InconsistentNaming
     public int Id { get; set; }
+    public decimal? CostEstimate { get; set; }
+    public List<ProductLineInBubble> ProductLines { get; set; } = null!;
     public string DestinationStreet { get; set; } = null!;
     public string DestinationCity { get; set; } = null!;
     public string DestinationState { get; set; } = null!;

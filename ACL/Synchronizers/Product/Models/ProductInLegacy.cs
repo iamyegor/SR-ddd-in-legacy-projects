@@ -1,4 +1,4 @@
-﻿namespace ACL.Synchronizers.Product.FromLegacyToBubble;
+﻿namespace ACL.Synchronizers.Product.Models;
 
 internal class ProductInLegacy
 {

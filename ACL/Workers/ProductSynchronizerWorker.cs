@@ -5,11 +5,13 @@ namespace ACL.Workers;
 public class ProductSynchronizerWorker : BackgroundService
 {
     private readonly TimeSpan _interval = TimeSpan.FromHours(1);
-    private readonly ProductSynchronizer _productSynchronizer;
+    private readonly FromLegacyToBubbleProductSynchronizer _fromLegacyToBubbleSynchronizer;
 
-    public ProductSynchronizerWorker(ProductSynchronizer productSynchronizer)
+    public ProductSynchronizerWorker(
+        FromLegacyToBubbleProductSynchronizer fromLegacyToBubbleSynchronizer
+    )
     {
-        _productSynchronizer = productSynchronizer;
+        _fromLegacyToBubbleSynchronizer = fromLegacyToBubbleSynchronizer;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -19,7 +21,9 @@ public class ProductSynchronizerWorker : BackgroundService
             try
             {
                 Console.WriteLine("Start syncing products");
-                _productSynchronizer.Sync();
+                
+                _fromLegacyToBubbleSynchronizer.Sync();
+                
                 await Task.Delay(_interval, stoppingToken);
             }
             catch (TaskCanceledException) { }
