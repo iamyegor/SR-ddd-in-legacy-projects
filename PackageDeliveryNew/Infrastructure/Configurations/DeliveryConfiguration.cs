@@ -22,11 +22,6 @@ public class DeliveryConfiguration : IEntityTypeConfiguration<Delivery>
         );
         builder.HasMany(d => d.ProductLines).WithOne().HasForeignKey("delivery_id");
 
-        builder
-            .Property(d => d.IsSyncNeeded)
-            .HasDefaultValue(false)
-            .HasColumnName("is_sync_needed");
-
         builder.Property(d => d.CostEstimate).HasColumnName("cost_estimate");
 
         builder.ToTable("deliveries");

@@ -13,8 +13,8 @@ using PackageDeliveryNew.Infrastructure;
 namespace PackageDeliveryNew.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    [Migration("20240325185719_Snake_case_all_database_column_and_table_names")]
-    partial class Snake_case_all_database_column_and_table_names
+    [Migration("20240329104424_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -35,12 +35,6 @@ namespace PackageDeliveryNew.Migrations
                     b.Property<decimal?>("CostEstimate")
                         .HasColumnType("numeric")
                         .HasColumnName("cost_estimate");
-
-                    b.Property<bool>("IsSyncNeeded")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false)
-                        .HasColumnName("is_sync_needed");
 
                     b.ComplexProperty<Dictionary<string, object>>("Destination", "PackageDeliveryNew.Deliveries.Delivery.Destination#Address", b1 =>
                         {
@@ -103,10 +97,6 @@ namespace PackageDeliveryNew.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("amount");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_deleted");
-
                     b.Property<int?>("delivery_id")
                         .HasColumnType("integer");
 
@@ -120,28 +110,6 @@ namespace PackageDeliveryNew.Migrations
                     b.HasIndex("product_id");
 
                     b.ToTable("product_lines", (string)null);
-                });
-
-            modelBuilder.Entity("PackageDeliveryNew.Infrastructure.Synchronization", b =>
-                {
-                    b.Property<string>("Name")
-                        .HasColumnType("text")
-                        .HasColumnName("name");
-
-                    b.Property<bool>("IsSyncRequired")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_sync_required");
-
-                    b.HasKey("Name");
-
-                    b.ToTable("sync", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Name = "Delivery",
-                            IsSyncRequired = false
-                        });
                 });
 
             modelBuilder.Entity("PackageDeliveryNew.Deliveries.ProductLine", b =>
