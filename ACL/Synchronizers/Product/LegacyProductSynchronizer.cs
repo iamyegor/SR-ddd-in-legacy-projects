@@ -3,6 +3,7 @@ using ACL.Synchronizers.Product.Models;
 using ACL.Synchronizers.Product.Repositories;
 using ACL.Workers;
 using AutoMapper;
+using Dapper;
 using Microsoft.Data.SqlClient;
 
 namespace ACL.Synchronizers.Product;
@@ -51,7 +52,9 @@ public class LegacyProductSynchronizer
 
     private bool IsSyncNeeded()
     {
-        throw new NotImplementedException();
+        using var connection = new SqlConnection(LegacyConnectionString.Value);
+        string query = "select IsSyncRequired from Synchronization where Name='Product'";
+        return connection.QuerySingle<bool>(query);
     }
 
     private List<ProductInLegacy> GetUpdatedProductsFromLegacy(
