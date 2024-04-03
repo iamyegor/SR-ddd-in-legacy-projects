@@ -3,14 +3,13 @@ using PackageDeliveryNew.Common;
 
 namespace PackageDeliveryNew.Deliveries;
 
-public class Delivery : Entity<int>, ISyncNeeded
+public class Delivery : Entity<int>
 {
     private const double PricePerMilePerPound = 0.04;
     private const double NonConditionalCharge = 20;
 
     public Address Destination { get; }
     public decimal? CostEstimate { get; private set; }
-    public bool IsSyncNeeded { get; set; }
     public IReadOnlyList<ProductLine> ProductLines => _productLines.ToList();
     private readonly List<ProductLine> _productLines;
     private readonly List<ProductLine> _removedProductLines = [];
