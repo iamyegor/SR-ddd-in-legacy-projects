@@ -58,6 +58,26 @@ public class BubbleDeliverySynchronizer
         NpgsqlTransaction transaction
     )
     {
-        throw new NotImplementedException();
+        var deliveryRepository = new BubbleDeliveryRepository(connection, transaction);
+        var productLineRepository = new BubbleProductLineRepository(connection, transaction);
+        var synchronizationRepository = new BubbleSynchronizationRepository(
+            connection,
+            transaction
+        );
+        
+        int syncRowVersion = synchronizationRepository.GetRowVersionFor("Delivery");
+
+        List<DeliveryInBubble> deliveries = deliveryRepository.GetAllThatNeedSync();
+        List<ProductLineInBubble> productLines = productLineRepository.GetAllThatNeedSync();
+
+        foreach (var delivery in deliveries)
+        {
+            delivery.ProductLines = productLines.Where(pl => pl.DeliveryId == delivery.Id).ToList();
+        }
+
+        deliveryRepository.SetSyncFlagsFalseForQueried();
+        synchronizationRepository.SetSyncFlagFalse("Delivery", syncRowVersion);
+
+        return deliveries;
     }
 }
