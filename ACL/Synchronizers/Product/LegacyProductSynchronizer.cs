@@ -1,6 +1,7 @@
 ﻿using ACL.ConnectionStrings;
 using ACL.Synchronizers.Product.Models;
 using ACL.Synchronizers.Product.Repositories;
+using ACL.Workers;
 using AutoMapper;
 using Microsoft.Data.SqlClient;
 
@@ -58,6 +59,19 @@ public class LegacyProductSynchronizer
         SqlTransaction transaction
     )
     {
-        throw new NotImplementedException();
+        var productRepository = new LegacyProductRepository(connection, transaction);
+        var synchronizationRepository = new LegacySynchronizationRepository(
+            connection,
+            transaction
+        );
+
+        byte[] syncRowVersion = synchronizationRepository.GetRowVersionFor("Product");
+
+        List<ProductInLegacy> products = productRepository.GetAllThatNeedSync();
+
+        productRepository.SetSyncFlagFalseForQueriedProducts();
+        synchronizationRepository.SetSyncFlagFalseFor("Product", syncRowVersion);
+
+        return products;
     }
 }
