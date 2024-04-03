@@ -1,7 +1,6 @@
 ﻿using ACL.ConnectionStrings;
 using ACL.Synchronizers.Product.Models;
 using ACL.Synchronizers.Product.Repositories;
-using ACL.Workers;
 using AutoMapper;
 using Dapper;
 using Microsoft.Data.SqlClient;
@@ -40,7 +39,7 @@ public class LegacyProductSynchronizer
             );
 
             var outboxRepository = new LegacyOutboxRepository(connection, transaction);
-            outboxRepository.Save(mappedProducts);
+            outboxRepository.Save(mappedProducts, "Product");
 
             transaction.Commit();
         }

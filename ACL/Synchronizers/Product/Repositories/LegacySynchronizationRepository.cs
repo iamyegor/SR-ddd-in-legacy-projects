@@ -2,7 +2,7 @@
 using Dapper;
 using Microsoft.Data.SqlClient;
 
-namespace ACL.Synchronizers.Product;
+namespace ACL.Synchronizers.Product.Repositories;
 
 internal class LegacySynchronizationRepository
 {
