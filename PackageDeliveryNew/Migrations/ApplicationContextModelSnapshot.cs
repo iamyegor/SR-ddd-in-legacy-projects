@@ -33,6 +33,10 @@ namespace PackageDeliveryNew.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("cost_estimate");
 
+                    b.Property<bool>("IsSyncNeeded")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_sync_needed");
+
                     b.ComplexProperty<Dictionary<string, object>>("Destination", "PackageDeliveryNew.Deliveries.Delivery.Destination#Address", b1 =>
                         {
                             b1.IsRequired();
@@ -83,49 +87,72 @@ namespace PackageDeliveryNew.Migrations
                     b.ToTable("products", (string)null);
                 });
 
-            modelBuilder.Entity("PackageDeliveryNew.Deliveries.ProductLine", b =>
+            modelBuilder.Entity("PackageDeliveryNew.Infrastructure.Synchronization", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<string>("Name")
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<bool>("IsSyncRequired")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_sync_required");
 
-                    b.Property<int>("Amount")
+                    b.Property<int>("RowVersion")
                         .HasColumnType("integer")
-                        .HasColumnName("amount");
+                        .HasColumnName("row_version");
 
-                    b.Property<int?>("delivery_id")
-                        .HasColumnType("integer");
+                    b.HasKey("Name");
 
-                    b.Property<int>("product_id")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("delivery_id");
-
-                    b.HasIndex("product_id");
-
-                    b.ToTable("product_lines", (string)null);
-                });
-
-            modelBuilder.Entity("PackageDeliveryNew.Deliveries.ProductLine", b =>
-                {
-                    b.HasOne("PackageDeliveryNew.Deliveries.Delivery", null)
-                        .WithMany("ProductLines")
-                        .HasForeignKey("delivery_id");
-
-                    b.HasOne("PackageDeliveryNew.Deliveries.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("product_id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
+                    b.ToTable("sync", (string)null);
                 });
 
             modelBuilder.Entity("PackageDeliveryNew.Deliveries.Delivery", b =>
                 {
+                    b.OwnsMany("PackageDeliveryNew.Deliveries.ProductLine", "ProductLines", b1 =>
+                        {
+                            b1.Property<int>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("integer")
+                                .HasColumnName("id");
+
+                            NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b1.Property<int>("Id"));
+
+                            b1.Property<int>("Amount")
+                                .HasColumnType("integer")
+                                .HasColumnName("amount");
+
+                            b1.Property<bool>("IsDeleted")
+                                .HasColumnType("boolean")
+                                .HasColumnName("is_deleted");
+
+                            b1.Property<int>("delivery_id")
+                                .HasColumnType("integer");
+
+                            b1.Property<int>("product_id")
+                                .HasColumnType("integer");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("delivery_id");
+
+                            b1.HasIndex("product_id");
+
+                            b1.ToTable("product_lines", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("delivery_id");
+
+                            b1.HasOne("PackageDeliveryNew.Deliveries.Product", "Product")
+                                .WithMany()
+                                .HasForeignKey("product_id")
+                                .OnDelete(DeleteBehavior.Cascade)
+                                .IsRequired();
+
+                            b1.Navigation("Product");
+                        });
+
                     b.Navigation("ProductLines");
                 });
 #pragma warning restore 612, 618

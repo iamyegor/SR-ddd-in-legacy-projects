@@ -8,7 +8,7 @@ public class DeliveryConfiguration : IEntityTypeConfiguration<Delivery>
 {
     public void Configure(EntityTypeBuilder<Delivery> builder)
     {
-        builder.HasKey(d => d.Id);
+        builder.ToTable("deliveries").HasKey(d => d.Id);
         builder.Property(d => d.Id).ValueGeneratedNever().HasColumnName("id");
         builder.ComplexProperty(
             d => d.Destination,
@@ -20,10 +20,23 @@ public class DeliveryConfiguration : IEntityTypeConfiguration<Delivery>
                 propertyBuilder.Property(d => d.ZipCode).HasColumnName("destination_zip_code");
             }
         );
-        builder.HasMany(d => d.ProductLines).WithOne().HasForeignKey("delivery_id");
+        builder.OwnsMany(
+            d => d.ProductLines,
+            ownsManyBuilder =>
+            {
+                ownsManyBuilder.Property(pl => pl.Id).HasColumnName("id");
+                ownsManyBuilder.ToTable("product_lines").HasKey(pl => pl.Id);
+                ownsManyBuilder.Property(pl => pl.Amount).HasColumnName("amount");
+                ownsManyBuilder.HasOne(pl => pl.Product).WithMany().HasForeignKey("product_id");
+                ownsManyBuilder.WithOwner().HasForeignKey("delivery_id");
+                ownsManyBuilder.Navigation(pl => pl.Product).AutoInclude();
+                ownsManyBuilder.Property(pl => pl.IsDeleted).HasColumnName("is_deleted");
+
+                ownsManyBuilder.ToTable("product_lines");
+            }
+        );
 
         builder.Property(d => d.CostEstimate).HasColumnName("cost_estimate");
-
-        builder.ToTable("deliveries");
+        builder.Property(d => d.IsSyncNeeded).HasColumnName("is_sync_needed");
     }
 }

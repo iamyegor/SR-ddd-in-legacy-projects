@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using PackageDelivery.Common;
 using PackageDelivery.Utils;
 using PackageDeliveryNew.Deliveries;
-using PackageDeliveryNew.Infrastructure;
+using PackageDeliveryNew.Infrastructure.Repositories;
 
 namespace PackageDelivery.DeliveryNew
 {
@@ -47,7 +47,7 @@ namespace PackageDelivery.DeliveryNew
 
         private void UpdateDeliveryInDb()
         {
-            _deliveryRepository.SaveDelivery(_delivery);
+            _deliveryRepository.Save(_delivery);
             DialogResult = true;
         }
 
