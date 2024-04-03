@@ -15,10 +15,12 @@ public class ApplicationContext : DbContext
     public virtual DbSet<Delivery> Deliveries => Set<Delivery>();
     public virtual DbSet<Product> Products => Set<Product>();
     public virtual DbSet<ProductLine> ProductLines => Set<ProductLine>();
+    public DbSet<Synchronization> Sync => Set<Synchronization>();
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.UseNpgsql(
-            "Host=localhost;Port=5432;Username=postgres;Password=yegor;Database=sr_package_delivery_new"
+            "Host=localhost;Port=5432;Username=postgres;Password=yapidr;Database=sr_package_delivery_new"
         );
     }
 
@@ -28,4 +30,11 @@ public class ApplicationContext : DbContext
             Assembly.GetAssembly(typeof(IEntityConfigurationAssembly))!
         );
     }
+}
+
+public class Synchronization
+{
+    public string Name { get; set; } = null!;
+    public bool IsSyncRequired { get; set; }
+    public int RowVersion { get; set; }
 }
