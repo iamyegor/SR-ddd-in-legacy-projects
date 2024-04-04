@@ -13,7 +13,6 @@ public class Delivery : Entity<int>, ISyncNeeded
     public decimal? CostEstimate { get; private set; }
     public IReadOnlyList<ProductLine> ProductLines => _productLines.ToList();
     private readonly List<ProductLine> _productLines;
-    private readonly List<ProductLine> _removedProductLines = [];
     public bool IsSyncNeeded { get; set; }
 
     public Delivery(
@@ -47,16 +46,6 @@ public class Delivery : Entity<int>, ISyncNeeded
     public void DeleteLine(ProductLine productLine)
     {
         _productLines.Remove(productLine);
-        _removedProductLines.Add(productLine);
-    }
-
-    public IEnumerable<ProductLine> PopRemovedProductLines()
-    {
-        List<ProductLine> copy = _removedProductLines.ToList();
-
-        _removedProductLines.Clear();
-
-        return copy;
     }
 
     public void DeleteAllLines()
