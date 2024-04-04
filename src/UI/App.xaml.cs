@@ -8,7 +8,7 @@ namespace PackageDelivery
         public App()
         {
             string legacyConnectionString =
-                "Server=localhost;Database=PackageDelivery;User Id=packageDelivery;Password=pd;TrustServerCertificate=True;";
+                "Server=localhost;Database=PackageDelivery;User Id=packageDelivery;Password=YourStrong!Passw0rd;TrustServerCertificate=True;";
 
             string bubbleConnectionString =
                 "Host=localhost;Port=5432;Username=postgres;Password=yegor;Database=sr_package_delivery_new";
