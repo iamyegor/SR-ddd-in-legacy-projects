@@ -1,9 +1,10 @@
 ﻿using Ardalis.GuardClauses;
 using PackageDeliveryNew.Common;
+using PackageDeliveryNew.Deliveries.InterfacesForSynchronization;
 
 namespace PackageDeliveryNew.Deliveries;
 
-public class Delivery : Entity<int>
+public class Delivery : Entity<int>, ISyncNeeded
 {
     private const double PricePerMilePerPound = 0.04;
     private const double NonConditionalCharge = 20;
@@ -13,6 +14,7 @@ public class Delivery : Entity<int>
     public IReadOnlyList<ProductLine> ProductLines => _productLines.ToList();
     private readonly List<ProductLine> _productLines;
     private readonly List<ProductLine> _removedProductLines = [];
+    public bool IsSyncNeeded { get; set; }
 
     public Delivery(
         int id,

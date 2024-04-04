@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using PackageDeliveryNew.Deliveries;
 using PackageDeliveryNew.Infrastructure.Configurations;
+using PackageDeliveryNew.Infrastructure.Interceptors;
 
 namespace PackageDeliveryNew.Infrastructure;
 
@@ -22,6 +23,8 @@ public class ApplicationContext : DbContext
         optionsBuilder.UseNpgsql(
             "Host=localhost;Port=5432;Username=postgres;Password=yapidr;Database=sr_package_delivery_new"
         );
+
+        optionsBuilder.AddInterceptors(new SyncInterceptor());
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
