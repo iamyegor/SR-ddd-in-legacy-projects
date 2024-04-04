@@ -34,13 +34,13 @@ public class BubbleOutboxRepository
 
     public (List<int>, List<T>) Get<T>(string type)
     {
+        using var connection = new NpgsqlConnection(BubbleConnectionString.Value);
+
         string query =
             @"
             select id as Id, content as Content
             from outbox
             where type = @type";
-
-        using var connection = new NpgsqlConnection(BubbleConnectionString.Value);
 
         List<OutboxRow> outboxRows = connection.Query<OutboxRow>(query).ToList();
 
@@ -48,7 +48,6 @@ public class BubbleOutboxRepository
         foreach (var json in outboxRows.Select(r => r.Content))
         {
             T? deserializedObject = JsonConvert.DeserializeObject<T>(json);
-
             if (deserializedObject == null)
             {
                 throw new Exception("Couldn't deserialize outbox entry");
@@ -58,6 +57,19 @@ public class BubbleOutboxRepository
         }
 
         List<int> ids = outboxRows.Select(r => r.Id).ToList();
+
         return (ids, objectsToReturn);
+    }
+
+    public void Remove(List<int> ids)
+    {
+        using var connection = new NpgsqlConnection(BubbleConnectionString.Value);
+
+        string query =
+            @"
+            delete from outbox
+            where id = @id";
+
+        connection.Execute(query, ids.Select(id => new { id }));
     }
 }
