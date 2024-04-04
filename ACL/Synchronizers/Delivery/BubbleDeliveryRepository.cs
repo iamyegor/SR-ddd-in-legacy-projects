@@ -33,6 +33,12 @@ public class BubbleDeliveryRepository
 
     public void SetSyncFlagsFalseForQueried()
     {
-        throw new NotImplementedException();
+        string query =
+            @$"
+            update deliveries
+            set is_sync_needed = false
+            where id in (select id from {TempTable})";
+
+        _connection.Execute(query, transaction: _transaction);
     }
 }
