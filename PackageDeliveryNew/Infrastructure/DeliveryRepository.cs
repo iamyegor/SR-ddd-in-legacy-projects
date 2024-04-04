@@ -19,39 +19,73 @@ public class DeliveryRepository
 
     public void SaveDelivery(Delivery delivery)
     {
-        using (var context = new ApplicationContext())
+        using var context = new ApplicationContext();
+
+        Delivery? existingDelivery = context.Deliveries.Find(delivery.Id);
+        if (existingDelivery == null)
         {
-            context.ChangeTracker.TrackGraph(
-                delivery,
-                e =>
-                {
-                    if (e.Entry.Entity.GetType() == typeof(Delivery))
-                    {
-                        e.Entry.State = EntityState.Modified;
-                    }
-                    else if (e.Entry.IsKeySet)
-                    {
-                        e.Entry.State = EntityState.Unchanged;
-                    }
-                    else
-                    {
-                        e.Entry.State = EntityState.Added;
-                    }
-                }
+            context.Deliveries.Add(delivery);
+        }
+        else
+        {
+            context.Entry(existingDelivery).CurrentValues.SetValues(delivery);
+
+            AddOrUpdateProductLines(delivery, existingDelivery, context);
+
+            RemoveProductLines(delivery, existingDelivery, context);
+
+            MarkProductsAsUnchanged(existingDelivery, context);
+        }
+    }
+
+    private void AddOrUpdateProductLines(
+        Delivery delivery,
+        Delivery existingDelivery,
+        ApplicationContext context
+    )
+    {
+        foreach (var productLine in delivery.ProductLines)
+        {
+            ProductLine? existingProductLine = existingDelivery.ProductLines.SingleOrDefault(pl =>
+                pl.Id == productLine.Id
             );
-            
-            List<Guid> removedProductLinesIds = delivery
-                .PopRemovedProductLines()
-                .Select(pl => pl.Id)
-                .ToList();
 
-            List<ProductLine> productLinesFromDb = context
-                .ProductLines.Where(pl => removedProductLinesIds.Contains(pl.Id))
-                .ToList();
+            if (existingProductLine == null)
+            {
+                existingDelivery.AddProductLine(productLine.Product, productLine.Amount);
+            }
+            else
+            {
+                context.Entry(existingProductLine).CurrentValues.SetValues(productLine);
+            }
+        }
+    }
 
-            context.ProductLines.RemoveRange(productLinesFromDb);
+    private void RemoveProductLines(
+        Delivery delivery,
+        Delivery existingDelivery,
+        ApplicationContext context
+    )
+    {
+        foreach (var existingProductLine in existingDelivery.ProductLines)
+        {
+            if (delivery.ProductLines.All(pl => pl.Id != existingProductLine.Id))
+            {
+                context.Remove(existingProductLine);
+            }
+        }
+    }
 
-            context.SaveChanges();
+    private void MarkProductsAsUnchanged(Delivery existingDelivery, ApplicationContext context)
+    {
+        IEnumerable<Product> uniqueProducts = existingDelivery
+            .ProductLines.Select(pl => pl.Product)
+            .GroupBy(p => p.Id)
+            .Select(group => group.First());
+
+        foreach (var product in uniqueProducts)
+        {
+            context.Entry(product).State = EntityState.Unchanged;
         }
     }
 }
