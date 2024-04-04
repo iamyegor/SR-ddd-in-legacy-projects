@@ -26,14 +26,8 @@ namespace PackageDeliveryNew.Migrations
                 oldType: "integer",
                 oldNullable: true);
 
-            migrationBuilder.AlterColumn<int>(
-                name: "id",
-                table: "product_lines",
-                type: "integer",
-                nullable: false,
-                oldClrType: typeof(Guid),
-                oldType: "uuid")
-                .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+            migrationBuilder.Sql("alter table product_lines drop column id");  
+            migrationBuilder.Sql("alter table product_lines add column id serial primary key");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_product_lines_deliveries_delivery_id",
@@ -59,14 +53,8 @@ namespace PackageDeliveryNew.Migrations
                 oldClrType: typeof(int),
                 oldType: "integer");
 
-            migrationBuilder.AlterColumn<Guid>(
-                name: "id",
-                table: "product_lines",
-                type: "uuid",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "integer")
-                .OldAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+            migrationBuilder.Sql("alter table product_lines drop column id");  
+            migrationBuilder.Sql("alter table product_lines add column id uuid primary key");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_product_lines_deliveries_delivery_id",
