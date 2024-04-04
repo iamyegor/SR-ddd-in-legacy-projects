@@ -26,7 +26,7 @@ public class BubbleOutboxRepository
         string query =
             @$"
             insert into outbox (content, type)
-            values (@Content, {type})";
+            values (@Content, '{type}')";
 
         _connection.Execute(query, deliveriesAsJson, transaction: _transaction);
     }
