@@ -2,6 +2,7 @@
 using ACL.Synchronizers.Delivery.Models;
 using ACL.Synchronizers.Delivery.Repositories;
 using AutoMapper;
+using Dapper;
 using Npgsql;
 
 namespace ACL.Synchronizers.Delivery;
@@ -50,7 +51,10 @@ public class BubbleDeliverySynchronizer
 
     private bool IsSyncNeeded()
     {
-        throw new NotImplementedException();
+        string query = "select is_sync_required from sync where name = 'Delivery'";
+        using var connection = new NpgsqlConnection(BubbleConnectionString.Value);
+
+        return connection.QuerySingle<bool>(query);
     }
 
     private List<DeliveryInBubble> GetUpdatedDeliveriesFromBubble(
@@ -64,7 +68,7 @@ public class BubbleDeliverySynchronizer
             connection,
             transaction
         );
-        
+
         int syncRowVersion = synchronizationRepository.GetRowVersionFor("Delivery");
 
         List<DeliveryInBubble> deliveries = deliveryRepository.GetAllThatNeedSync();
