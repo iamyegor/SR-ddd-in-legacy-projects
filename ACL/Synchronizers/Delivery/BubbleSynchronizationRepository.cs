@@ -9,7 +9,7 @@ public class BubbleSynchronizationRepository
         throw new NotImplementedException();
     }
 
-    public int GetRowVersionFor(string type)
+    public int GetRowVersionFor(string name)
     {
         throw new NotImplementedException();
     }
