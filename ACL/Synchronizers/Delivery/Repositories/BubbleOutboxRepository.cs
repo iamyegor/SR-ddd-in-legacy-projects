@@ -1,4 +1,5 @@
-﻿using ACL.Synchronizers.Delivery.Models;
+﻿using ACL.ConnectionStrings;
+using ACL.Synchronizers.Delivery.Models;
 using Dapper;
 using Newtonsoft.Json;
 using Npgsql;
@@ -29,5 +30,34 @@ public class BubbleOutboxRepository
             values (@Content, '{type}')";
 
         _connection.Execute(query, deliveriesAsJson, transaction: _transaction);
+    }
+
+    public (List<int>, List<T>) Get<T>(string type)
+    {
+        string query =
+            @"
+            select id as Id, content as Content
+            from outbox
+            where type = @type";
+
+        using var connection = new NpgsqlConnection(BubbleConnectionString.Value);
+
+        List<OutboxRow> outboxRows = connection.Query<OutboxRow>(query).ToList();
+
+        List<T> objectsToReturn = [];
+        foreach (var json in outboxRows.Select(r => r.Content))
+        {
+            T? deserializedObject = JsonConvert.DeserializeObject<T>(json);
+
+            if (deserializedObject == null)
+            {
+                throw new Exception("Couldn't deserialize outbox entry");
+            }
+
+            objectsToReturn.Add(deserializedObject);
+        }
+
+        List<int> ids = outboxRows.Select(r => r.Id).ToList();
+        return (ids, objectsToReturn);
     }
 }
