@@ -1,21 +1,51 @@
-﻿using Npgsql;
+﻿using System.Data;
+using Dapper;
+using Npgsql;
 
 namespace ACL.Synchronizers.Delivery;
 
 public class BubbleSynchronizationRepository
 {
-    public BubbleSynchronizationRepository(NpgsqlConnection connection, NpgsqlTransaction transaction)
+    private readonly NpgsqlConnection _connection;
+    private readonly NpgsqlTransaction _transaction;
+
+    public BubbleSynchronizationRepository(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction
+    )
     {
-        throw new NotImplementedException();
+        _connection = connection;
+        _transaction = transaction;
     }
 
-    public int GetRowVersionFor(string name)
+    public int GetRowVersionFor(string rowName)
     {
-        throw new NotImplementedException();
+        string query =
+            @"
+            select row_version
+            from sync
+            where name = @rowName";
+
+        return _connection.QuerySingle<int>(query, new { rowName }, transaction: _transaction);
     }
 
-    public void SetSyncFlagFalse(string name, int rowVersion)
+    public void SetSyncFlagFalse(string rowName, int rowVersion)
     {
-        throw new NotImplementedException();
+        string query =
+            @"
+            update sync
+            set is_sync_required = false
+            where name = @rowName and row_version = @rowVersion";
+
+        int rowsAffected = _connection.Execute(
+            query,
+            new { rowName, rowVersion },
+            transaction: _transaction
+        );
+
+        if (rowsAffected == 0)
+        {
+            throw new DBConcurrencyException($"row_version conflict in {rowName} row in sync table");
+        }
     }
 }
