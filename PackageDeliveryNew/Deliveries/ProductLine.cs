@@ -1,13 +1,15 @@
 ﻿using Ardalis.GuardClauses;
 using PackageDeliveryNew.Common;
+using PackageDeliveryNew.Deliveries.InterfacesForSynchronization;
 
 namespace PackageDeliveryNew.Deliveries;
 
-public class ProductLine : ValueObject
+public class ProductLine : ValueObject, ISoftDelete
 {
     public int Id { get; private set; }
     public Product Product { get; private set; }
     public int Amount { get; private set; }
+    public bool IsDeleted { get; set; }
 
     public ProductLine(Product product, int amount)
     {
