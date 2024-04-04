@@ -30,6 +30,7 @@ public class DeliveryConfiguration : IEntityTypeConfiguration<Delivery>
                 ownsManyBuilder.HasOne(pl => pl.Product).WithMany().HasForeignKey("product_id");
                 ownsManyBuilder.WithOwner().HasForeignKey("delivery_id");
                 ownsManyBuilder.Navigation(pl => pl.Product).AutoInclude();
+                ownsManyBuilder.Property(pl => pl.IsDeleted).HasColumnName("is_deleted");
             }
         );
         builder.Property(d => d.CostEstimate).HasColumnName("cost_estimate");
