@@ -23,7 +23,8 @@ public class BubbleProductLineRepository
             select 
                 product_id as ProductId,
                 amount as Amount,
-                delivery_id as DeliveryId
+                delivery_id as DeliveryId,
+                is_deleted as IsDeleted
             into temp {TempTable}
             from product_lines
             where delivery_id in (select id from deliveries where is_sync_needed = true)
@@ -32,5 +33,15 @@ public class BubbleProductLineRepository
             from {TempTable}";
 
         return _connection.Query<ProductLineInBubble>(query, transaction: _transaction).ToList();
+    }
+
+    public void DeleteQueriedThatNeedDelete()
+    {
+        string query =
+            @$"
+            delete from product_lines
+            where is_deleted = true and id in (select id from {TempTable})";
+
+        _connection.Execute(query, transaction: _transaction);
     }
 }

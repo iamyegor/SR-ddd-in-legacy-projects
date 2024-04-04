@@ -79,6 +79,8 @@ public class BubbleDeliverySynchronizer
             delivery.ProductLines = productLines.Where(pl => pl.DeliveryId == delivery.Id).ToList();
         }
 
+        productLineRepository.DeleteQueriedThatNeedDelete();
+
         deliveryRepository.SetSyncFlagsFalseForQueried();
         synchronizationRepository.SetSyncFlagFalse("Delivery", syncRowVersion);
 
