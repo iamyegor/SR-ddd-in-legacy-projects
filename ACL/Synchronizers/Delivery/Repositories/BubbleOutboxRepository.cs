@@ -42,7 +42,7 @@ public class BubbleOutboxRepository
             from outbox
             where type = @type";
 
-        List<OutboxRow> outboxRows = connection.Query<OutboxRow>(query).ToList();
+        List<OutboxRow> outboxRows = connection.Query<OutboxRow>(query, new { type }).ToList();
 
         List<T> objectsToReturn = [];
         foreach (var json in outboxRows.Select(r => r.Content))
