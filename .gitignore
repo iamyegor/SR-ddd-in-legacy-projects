@@ -2,6 +2,9 @@
 */[Bb]in/
 */[Oo]bj/
 
+src/*/[Bb]in/
+src/*/[Oo]bj/
+
 # MSTest test Results
 [Tt]est[Rr]esult*/
 
