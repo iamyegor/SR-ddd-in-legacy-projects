@@ -1,5 +1,4 @@
-﻿using System.Text.Json.Serialization;
-using ACL.ConnectionStrings;
+﻿using ACL.ConnectionStrings;
 using ACL.Synchronizers.Product.Models;
 using Dapper;
 using Microsoft.Data.SqlClient;
@@ -9,8 +8,8 @@ namespace ACL.Synchronizers.Product.Repositories;
 
 public class LegacyOutboxRepository
 {
-    private readonly SqlConnection _connection;
-    private readonly SqlTransaction _transaction;
+    private readonly SqlConnection? _connection;
+    private readonly SqlTransaction? _transaction;
 
     public LegacyOutboxRepository(SqlConnection connection, SqlTransaction transaction)
     {
@@ -18,9 +17,14 @@ public class LegacyOutboxRepository
         _transaction = transaction;
     }
 
-    public void Save(List<ProductInBubble> productsToSave, string type)
+    public LegacyOutboxRepository() { }
+
+    public void Save(IEnumerable<object> objectsToSave, string type)
     {
-        var productsAsJson = productsToSave.Select(p => new
+        ArgumentNullException.ThrowIfNull(_transaction);
+        ArgumentNullException.ThrowIfNull(_connection);
+
+        var productsAsJson = objectsToSave.Select(p => new
         {
             Content = JsonConvert.SerializeObject(p)
         });
@@ -67,7 +71,7 @@ public class LegacyOutboxRepository
     public void Remove(List<int> ids)
     {
         using var connection = new SqlConnection(LegacyConnectionString.Value);
-        
+
         string query =
             @"
             delete from Outbox

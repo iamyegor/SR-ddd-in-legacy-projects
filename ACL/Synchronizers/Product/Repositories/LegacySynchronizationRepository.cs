@@ -30,7 +30,7 @@ internal class LegacySynchronizationRepository
         string query =
             @"
             update Synchronization
-            set IsSyncRequired
+            set IsSyncRequired = 0
             where Name=@name and RowVersion=@rowVersion";
 
         int rowsAffected = _connection.Execute(

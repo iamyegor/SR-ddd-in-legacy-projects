@@ -7,6 +7,33 @@ public class DeliveryProfile : Profile
 {
     public DeliveryProfile()
     {
+        CreateMap<DeliveryInLegacy, DeliveryInBubble>()
+            .ForMember(dest => dest.Id, opts => opts.MapFrom(src => src.NMB_CLM))
+            .ForMember(
+                dest => dest.DestinationStreet,
+                opts => opts.MapFrom(src => (src.STR ?? "").Trim())
+            )
+            .ForMember(
+                dest => dest.DestinationZipCode,
+                opts => opts.MapFrom(src => (src.ZP ?? "").Trim())
+            )
+            .AfterMap(
+                (src, dest) =>
+                {
+                    if (string.IsNullOrWhiteSpace(src.CT_ST) || src.CT_ST.IndexOf(' ') == -1)
+                    {
+                        throw new Exception(
+                            $"Delivery with id {src.NMB_CLM} has invalid city and state"
+                        );
+                    }
+
+                    string[] cityAndState = src.CT_ST.Split(' ', 2);
+
+                    dest.DestinationCity = cityAndState[0];
+                    dest.DestinationState = cityAndState[1];
+                }
+            );
+
         CreateMap<DeliveryInBubble, DeliveryInLegacy>()
             .ForMember(dest => dest.NMB_CLM, opts => opts.MapFrom(src => src.Id))
             .ForMember(dest => dest.ESTM_CLM, opts => opts.MapFrom(src => src.CostEstimate))
@@ -28,7 +55,7 @@ public class DeliveryProfile : Profile
                     List<ProductLineInBubble> notDeletedProductLines = src
                         .ProductLines.Where(pl => !pl.IsDeleted)
                         .ToList();
-                    
+
                     if (notDeletedProductLines.Count > 0)
                     {
                         var line = notDeletedProductLines[0];

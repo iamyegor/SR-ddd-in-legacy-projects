@@ -13,6 +13,7 @@ public class ProductSynchronizerWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        Console.WriteLine("Product worker started");
         while (!stoppingToken.IsCancellationRequested)
         {
             _legacyProductSynchronizer.Sync();

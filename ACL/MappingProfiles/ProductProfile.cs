@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.Design;
-using ACL.Synchronizers.Product.Models;
+﻿using ACL.Synchronizers.Product.Models;
 using AutoMapper;
 
 namespace ACL.MappingProfiles;
@@ -14,7 +13,7 @@ public class ProductProfile : Profile
             .AfterMap(
                 (src, dest) =>
                 {
-                    if (src.WT == null || src.WT_KG == null)
+                    if (src.WT == null && src.WT_KG == null)
                     {
                         throw new Exception("Weight in legacy database is invalid");
                     }

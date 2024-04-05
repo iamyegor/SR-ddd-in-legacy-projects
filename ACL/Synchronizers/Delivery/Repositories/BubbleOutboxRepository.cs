@@ -8,8 +8,8 @@ namespace ACL.Synchronizers.Delivery.Repositories;
 
 public class BubbleOutboxRepository
 {
-    private readonly NpgsqlConnection _connection;
-    private readonly NpgsqlTransaction _transaction;
+    private readonly NpgsqlConnection? _connection;
+    private readonly NpgsqlTransaction? _transaction;
 
     public BubbleOutboxRepository(NpgsqlConnection connection, NpgsqlTransaction transaction)
     {
@@ -17,8 +17,13 @@ public class BubbleOutboxRepository
         _transaction = transaction;
     }
 
+    public BubbleOutboxRepository() { }
+
     public void Save(List<DeliveryInLegacy> deliveriesToSave, string type)
     {
+        ArgumentNullException.ThrowIfNull(_connection);
+        ArgumentNullException.ThrowIfNull(_transaction);
+        
         var deliveriesAsJson = deliveriesToSave.Select(delivery => new
         {
             Content = JsonConvert.SerializeObject(delivery)
@@ -27,7 +32,7 @@ public class BubbleOutboxRepository
         string query =
             @$"
             insert into outbox (content, type)
-            values (@Content, '{type}')";
+            values (@Content::jsonb, '{type}')";
 
         _connection.Execute(query, deliveriesAsJson, transaction: _transaction);
     }

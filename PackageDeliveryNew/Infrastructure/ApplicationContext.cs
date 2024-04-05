@@ -20,11 +20,11 @@ public class ApplicationContext : DbContext
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.UseNpgsql(
-            "Host=localhost;Port=5432;Username=postgres;Password=yapidr;Database=sr_package_delivery_new"
+            "Host=localhost;Port=5432;Username=postgres;Password=yegor;Database=sr_package_delivery_new"
         );
 
         optionsBuilder.AddInterceptors(new SyncInterceptor());
-        optionsBuilder.AddInterceptors(new SoftDeleteInterceptor());
+        optionsBuilder.AddInterceptors(new ProductLineSoftDeleteInterceptor());
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

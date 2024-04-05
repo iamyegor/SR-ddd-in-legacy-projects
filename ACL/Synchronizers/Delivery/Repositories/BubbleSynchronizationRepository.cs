@@ -2,7 +2,7 @@
 using Dapper;
 using Npgsql;
 
-namespace ACL.Synchronizers.Delivery;
+namespace ACL.Synchronizers.Delivery.Repositories;
 
 public class BubbleSynchronizationRepository
 {

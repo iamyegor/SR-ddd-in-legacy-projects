@@ -12,4 +12,7 @@ public class DeliveryInLegacy
     public int? PRD_LN_3_AMN { get; set; }
     public int? PRD_LN_4 { get; set; }
     public int? PRD_LN_4_AMN { get; set; }
+    public string? STR { get; set; }
+    public string? ZP { get; set; }
+    public string? CT_ST { get; set; }
 }

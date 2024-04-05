@@ -1,6 +1,4 @@
-﻿using Ardalis.GuardClauses;
-
-namespace PackageDeliveryNew.Common;
+﻿namespace PackageDeliveryNew.Common;
 
 public abstract class Entity<TId>
 {

@@ -36,7 +36,7 @@ public class LegacyProductRepository
         string query =
             @$"
             update p
-            set p.IsSyncNeeded = 1
+            set p.IsSyncNeeded = 0
             from PRD_TBL p
             inner join {TempTable} t on t.NMB_CM = p.NMB_CM";
 

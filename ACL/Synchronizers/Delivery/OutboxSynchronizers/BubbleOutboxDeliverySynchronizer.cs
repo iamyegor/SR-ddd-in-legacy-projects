@@ -1,7 +1,7 @@
 using ACL.Synchronizers.Delivery.Models;
 using ACL.Synchronizers.Delivery.Repositories;
 
-namespace ACL.Synchronizers.Delivery;
+namespace ACL.Synchronizers.Delivery.OutboxSynchronizers;
 
 public class BubbleOutboxDeliverySynchronizer
 {

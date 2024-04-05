@@ -11,7 +11,7 @@ public class DeliveryRepository
         {
             return context
                 .Deliveries.Where(d => d.Id == id)
-                .Include(d => d.ProductLines)
+                .Include(d => d.ProductLines.Where(pl => !pl.IsDeleted))
                 .ThenInclude(pl => pl.Product)
                 .SingleOrDefault();
         }
@@ -36,6 +36,8 @@ public class DeliveryRepository
 
             MarkProductsAsUnchanged(existingDelivery, context);
         }
+
+        context.SaveChanges();
     }
 
     private void AddOrUpdateProductLines(
@@ -50,7 +52,7 @@ public class DeliveryRepository
                 pl.Id == productLine.Id
             );
 
-            if (existingProductLine == null)
+            if (existingProductLine == null || productLine.Id == 0)
             {
                 existingDelivery.AddProductLine(productLine.Product, productLine.Amount);
             }

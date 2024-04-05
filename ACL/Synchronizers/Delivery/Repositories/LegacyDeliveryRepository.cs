@@ -7,6 +7,18 @@ namespace ACL.Synchronizers.Delivery.Repositories;
 
 public class LegacyDeliveryRepository
 {
+    private const string TempTable = "#deliveries_to_sync";
+    private readonly SqlConnection? _connection;
+    private readonly SqlTransaction? _transaction;
+
+    public LegacyDeliveryRepository(SqlConnection connection, SqlTransaction transaction)
+    {
+        _connection = connection;
+        _transaction = transaction;
+    }
+
+    public LegacyDeliveryRepository() { }
+
     public void Save(List<DeliveryInLegacy> deliveries)
     {
         using var connection = new SqlConnection(LegacyConnectionString.Value);
@@ -37,5 +49,39 @@ public class LegacyDeliveryRepository
             end";
 
         connection.Execute(query, deliveries);
+    }
+
+    public List<DeliveryInLegacy> GetAllThatNeedSync()
+    {
+        ArgumentNullException.ThrowIfNull(_connection);
+        ArgumentNullException.ThrowIfNull(_transaction);
+
+        string query =
+            @$"
+            select d.NMB_CLM, a.CT_ST, a.STR, a.ZP
+            into {TempTable}
+            from DLVR_TBL d with (updlock)
+            inner join ADDR_TBL a on d.NMB_CLM = a.DLVR
+            where d.IsSyncRequired = 1
+
+            select *
+            from {TempTable}";
+
+        return _connection.Query<DeliveryInLegacy>(query, transaction: _transaction).ToList();
+    }
+
+    public void SetSyncFlagFalse()
+    {
+        ArgumentNullException.ThrowIfNull(_connection);
+        ArgumentNullException.ThrowIfNull(_transaction);
+
+        string query =
+            @$"
+            update d
+            set d.IsSyncRequired = 0
+            from DLVR_TBL d
+            inner join {TempTable} t on d.NMB_CLM = t.NMB_CLM";
+
+        _connection.Execute(query, transaction: _transaction);
     }
 }
