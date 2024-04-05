@@ -3022,11 +3022,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\yyego\\RiderProjects\\ddd_legacy_projects\\src\\UI\\PackageDelivery.csproj",
+      "projectUniqueName": "C:\\Users\\yyego\\RiderProjects\\ddd_in_legacy_projects\\src\\UI\\PackageDelivery.csproj",
       "projectName": "PackageDelivery",
-      "projectPath": "C:\\Users\\yyego\\RiderProjects\\ddd_legacy_projects\\src\\UI\\PackageDelivery.csproj",
+      "projectPath": "C:\\Users\\yyego\\RiderProjects\\ddd_in_legacy_projects\\src\\UI\\PackageDelivery.csproj",
       "packagesPath": "C:\\Users\\yyego\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\yyego\\RiderProjects\\ddd_legacy_projects\\src\\UI\\obj\\",
+      "outputPath": "C:\\Users\\yyego\\RiderProjects\\ddd_in_legacy_projects\\src\\UI\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\yyego\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -3041,8 +3041,8 @@
         "net8.0-windows7.0": {
           "targetAlias": "net8.0-windows",
           "projectReferences": {
-            "C:\\Users\\yyego\\RiderProjects\\ddd_legacy_projects\\PackageDeliveryNew\\PackageDeliveryNew.csproj": {
-              "projectPath": "C:\\Users\\yyego\\RiderProjects\\ddd_legacy_projects\\PackageDeliveryNew\\PackageDeliveryNew.csproj"
+            "C:\\Users\\yyego\\RiderProjects\\ddd_in_legacy_projects\\PackageDeliveryNew\\PackageDeliveryNew.csproj": {
+              "projectPath": "C:\\Users\\yyego\\RiderProjects\\ddd_in_legacy_projects\\PackageDeliveryNew\\PackageDeliveryNew.csproj"
             }
           }
         }
