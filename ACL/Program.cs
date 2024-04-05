@@ -7,5 +7,7 @@ builder.Services.AddHostedService<ProductSynchronizerWorker>();
 
 LegacyConnectionString.Value = builder.Configuration.GetConnectionString("Legacy")!;
 
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
 var host = builder.Build();
 host.Run();
