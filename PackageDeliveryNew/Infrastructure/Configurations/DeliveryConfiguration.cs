@@ -20,7 +20,18 @@ public class DeliveryConfiguration : IEntityTypeConfiguration<Delivery>
                 propertyBuilder.Property(d => d.ZipCode).HasColumnName("destination_zip_code");
             }
         );
-        builder.HasMany(d => d.ProductLines).WithOne().HasForeignKey("delivery_id");
+        builder.OwnsMany(
+            d => d.ProductLines,
+            ownsManyBuilder =>
+            {
+                ownsManyBuilder.ToTable("product_lines").HasKey(pl => pl.Id);
+                ownsManyBuilder.Property(pl => pl.Id).HasColumnName("id");
+                ownsManyBuilder.Property(pl => pl.Amount).HasColumnName("amount");
+                ownsManyBuilder.HasOne(pl => pl.Product).WithMany().HasForeignKey("product_id");
+                ownsManyBuilder.WithOwner().HasForeignKey("delivery_id");
+                ownsManyBuilder.Navigation(pl => pl.Product).AutoInclude();
+            }
+        );
         builder.Property(d => d.CostEstimate).HasColumnName("cost_estimate");
         builder
             .Property(d => d.IsSyncNeeded)
