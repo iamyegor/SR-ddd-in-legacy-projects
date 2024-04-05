@@ -20,7 +20,7 @@ public class BubbleDeliveryRepository
     {
         string query =
             @$"
-            select id as Id, cost_estimate as Id
+            select id as Id, cost_estimate as CostEstimate
             into temp {TempTable}
             from deliveries
             where is_sync_needed = true
