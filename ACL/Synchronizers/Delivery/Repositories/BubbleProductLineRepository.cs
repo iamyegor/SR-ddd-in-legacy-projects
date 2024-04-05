@@ -28,6 +28,7 @@ public class BubbleProductLineRepository
             into temp {TempTable}
             from product_lines
             where delivery_id in (select id from deliveries where is_sync_needed = true)
+            for update;
 
             select *
             from {TempTable}";

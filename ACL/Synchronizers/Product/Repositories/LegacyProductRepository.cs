@@ -21,7 +21,7 @@ public class LegacyProductRepository
         string query =
             @$"select 
                 NMB_CM, NM_CLM, WT, WT_KG 
-            into temp {TempTable} 
+            into {TempTable} with (updlock)
             from PRD_TBL
             where IsSyncNeeded = 1
             

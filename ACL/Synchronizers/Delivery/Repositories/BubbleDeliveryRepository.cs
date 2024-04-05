@@ -24,6 +24,7 @@ public class BubbleDeliveryRepository
             into temp {TempTable}
             from deliveries
             where is_sync_needed = true
+            for update;
 
             select *
             from {TempTable}";
