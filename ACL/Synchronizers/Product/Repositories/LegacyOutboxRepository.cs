@@ -1,5 +1,4 @@
-﻿using ACL.Synchronizers.Product.Models;
-using Microsoft.Data.SqlClient;
+﻿using Microsoft.Data.SqlClient;
 
 namespace ACL.Synchronizers.Product.Repositories;
 
@@ -10,7 +9,7 @@ public class LegacyOutboxRepository
         throw new NotImplementedException();
     }
 
-    public void Save(List<ProductInBubble> mappedProducts)
+    public void Save(IEnumerable<object> objectsToSave, string type)
     {
         throw new NotImplementedException();
     }
