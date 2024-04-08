@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\yyego\\RiderProjects\\ddd_legacy_projects\\src\\UI\\PackageDelivery.csproj": {}
+    "/home/yegor/RiderProjects/SR_ddd_in_legacy_projects/src/UI/PackageDelivery.csproj": {}
   },
   "projects": {
-    "C:\\Users\\yyego\\RiderProjects\\ddd_legacy_projects\\PackageDeliveryNew\\PackageDeliveryNew.csproj": {
+    "/home/yegor/RiderProjects/SR_ddd_in_legacy_projects/PackageDeliveryNew/PackageDeliveryNew.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\yyego\\RiderProjects\\ddd_legacy_projects\\PackageDeliveryNew\\PackageDeliveryNew.csproj",
+        "projectUniqueName": "/home/yegor/RiderProjects/SR_ddd_in_legacy_projects/PackageDeliveryNew/PackageDeliveryNew.csproj",
         "projectName": "PackageDeliveryNew",
-        "projectPath": "C:\\Users\\yyego\\RiderProjects\\ddd_legacy_projects\\PackageDeliveryNew\\PackageDeliveryNew.csproj",
-        "packagesPath": "C:\\Users\\yyego\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\yyego\\RiderProjects\\ddd_legacy_projects\\PackageDeliveryNew\\obj\\",
+        "projectPath": "/home/yegor/RiderProjects/SR_ddd_in_legacy_projects/PackageDeliveryNew/PackageDeliveryNew.csproj",
+        "packagesPath": "/home/yegor/.nuget/packages/",
+        "outputPath": "/home/yegor/RiderProjects/SR_ddd_in_legacy_projects/PackageDeliveryNew/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\yyego\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "/home/yegor/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -85,21 +85,21 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.203/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/8.0.203/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\yyego\\RiderProjects\\ddd_legacy_projects\\src\\UI\\PackageDelivery.csproj": {
+    "/home/yegor/RiderProjects/SR_ddd_in_legacy_projects/src/UI/PackageDelivery.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\yyego\\RiderProjects\\ddd_legacy_projects\\src\\UI\\PackageDelivery.csproj",
+        "projectUniqueName": "/home/yegor/RiderProjects/SR_ddd_in_legacy_projects/src/UI/PackageDelivery.csproj",
         "projectName": "PackageDelivery",
-        "projectPath": "C:\\Users\\yyego\\RiderProjects\\ddd_legacy_projects\\src\\UI\\PackageDelivery.csproj",
-        "packagesPath": "C:\\Users\\yyego\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\yyego\\RiderProjects\\ddd_legacy_projects\\src\\UI\\obj\\",
+        "projectPath": "/home/yegor/RiderProjects/SR_ddd_in_legacy_projects/src/UI/PackageDelivery.csproj",
+        "packagesPath": "/home/yegor/.nuget/packages/",
+        "outputPath": "/home/yegor/RiderProjects/SR_ddd_in_legacy_projects/src/UI/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\yyego\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "/home/yegor/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0-windows"
@@ -111,8 +111,8 @@
           "net8.0-windows7.0": {
             "targetAlias": "net8.0-windows",
             "projectReferences": {
-              "C:\\Users\\yyego\\RiderProjects\\ddd_legacy_projects\\PackageDeliveryNew\\PackageDeliveryNew.csproj": {
-                "projectPath": "C:\\Users\\yyego\\RiderProjects\\ddd_legacy_projects\\PackageDeliveryNew\\PackageDeliveryNew.csproj"
+              "/home/yegor/RiderProjects/SR_ddd_in_legacy_projects/PackageDeliveryNew/PackageDeliveryNew.csproj": {
+                "projectPath": "/home/yegor/RiderProjects/SR_ddd_in_legacy_projects/PackageDeliveryNew/PackageDeliveryNew.csproj"
               }
             }
           }
@@ -163,7 +163,7 @@
               "privateAssets": "none"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.203/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/8.0.203/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
