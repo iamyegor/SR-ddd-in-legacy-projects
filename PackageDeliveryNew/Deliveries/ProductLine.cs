@@ -7,6 +7,7 @@ public class ProductLine : Entity<Guid>
 {
     public Product Product { get; private set; }
     public int Amount { get; private set; }
+    public bool IsDeleted { get; set; }
 
     public ProductLine(Product product, int amount)
         : base(new Guid())

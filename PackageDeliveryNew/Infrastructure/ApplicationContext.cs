@@ -25,6 +25,7 @@ public class ApplicationContext : DbContext
         );
 
         optionsBuilder.AddInterceptors(new SyncInterceptor());
+        optionsBuilder.AddInterceptors(new SoftDeleteInterceptor());
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
