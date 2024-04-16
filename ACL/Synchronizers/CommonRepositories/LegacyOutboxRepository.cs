@@ -19,4 +19,14 @@ public class LegacyOutboxRepository
         SqlConnection connection = transaction.Connection!;
         connection.Execute(query, jsonListToSave, transaction: transaction);
     }
+
+    public (List<int>, List<T>) Get<T>()
+    {
+        throw new NotImplementedException();
+    }
+
+    public void Remove(List<int> ids)
+    {
+        throw new NotImplementedException();
+    }
 }
