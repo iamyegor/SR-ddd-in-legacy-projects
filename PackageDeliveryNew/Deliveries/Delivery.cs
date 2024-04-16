@@ -13,6 +13,7 @@ public class Delivery : Entity<int>
     public IReadOnlyList<ProductLine> ProductLines => _productLines.ToList();
     private readonly List<ProductLine> _productLines;
     private readonly List<ProductLine> _removedProductLines = [];
+    public bool IsSyncNeeded { get; set; }
 
     public Delivery(
         int id,

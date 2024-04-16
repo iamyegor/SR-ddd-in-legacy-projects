@@ -10,6 +10,7 @@ public class DeliveryConfiguration : IEntityTypeConfiguration<Delivery>
     {
         builder.HasKey(d => d.Id);
         builder.Property(d => d.Id).ValueGeneratedNever().HasColumnName("id");
+        builder.Property(d => d.IsSyncNeeded).HasColumnName("is_sync_needed");
         builder.ComplexProperty(
             d => d.Destination,
             propertyBuilder =>
