@@ -1,4 +1,4 @@
-using ACL.Synchronizers.CommonRepositories;
+using ACL.Synchronizers.CommonRepositories.Outbox;
 using ACL.Synchronizers.Product.Models;
 using ACL.Synchronizers.Product.Repositories;
 
