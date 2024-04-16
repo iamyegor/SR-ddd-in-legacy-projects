@@ -91,7 +91,10 @@ public class BubbleDeliveryRepository
         NpgsqlTransaction transaction
     )
     {
-        throw new NotImplementedException();
+        string query = "delete from product_lines where is_deleted = true and id = any(@Ids)";
+
+        NpgsqlConnection connection = transaction.Connection!;
+        connection.Execute(query, new { Ids = productLineIds }, transaction: transaction);
     }
 
     private void ResetSyncFlags(List<int> deliveryIds, NpgsqlTransaction transaction)
