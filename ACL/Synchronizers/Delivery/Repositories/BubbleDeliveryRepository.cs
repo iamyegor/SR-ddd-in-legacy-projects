@@ -52,7 +52,38 @@ public class BubbleDeliveryRepository
         NpgsqlTransaction transaction
     )
     {
-        throw new NotImplementedException();
+        string query =
+            @"
+            select d.*, pl.id as pl_id, pl.*
+            from deliveries d
+            inner join product_lines pl on d.id = pl.delivery_id and pl.is_deleted = false
+            where d.id = any(@deliveryIds)";
+
+        var deliveryDictionary = new Dictionary<int, DeliveryInBubble>();
+
+        NpgsqlConnection connection = transaction.Connection!;
+        IEnumerable<DeliveryInBubble> deliveries = connection
+            .Query<DeliveryInBubble, ProductLineInBubble, DeliveryInBubble>(
+                query,
+                (delivery, productLine) =>
+                {
+                    if (!deliveryDictionary.TryGetValue(delivery.Id, out var existingDelivery))
+                    {
+                        existingDelivery = delivery;
+                        deliveryDictionary.Add(existingDelivery.Id, existingDelivery);
+                    }
+
+                    existingDelivery.ProductLines.Add(productLine);
+
+                    return existingDelivery;
+                },
+                param: new { deliveryIds },
+                splitOn: "pl_id",
+                transaction: transaction
+            )
+            .Distinct();
+
+        return deliveries.ToList();
     }
 
     private void DeleteSoftDeletedProductLines(
