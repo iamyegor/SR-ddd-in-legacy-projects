@@ -1,4 +1,5 @@
 using ACL.Synchronizers.Delivery.Models;
+using Dapper;
 using Npgsql;
 
 namespace ACL.Synchronizers.Delivery.Repositories;
@@ -23,7 +24,27 @@ public class BubbleDeliveryRepository
         NpgsqlTransaction transaction
     )
     {
-        throw new NotImplementedException();
+        string deliveriesQuery =
+            "select id from deliveries where is_sync_needed = true for update;";
+
+        NpgsqlConnection connection = transaction.Connection!;
+        List<int> deliveryIds = connection
+            .Query<int>(deliveriesQuery, transaction: transaction)
+            .ToList();
+
+        if (deliveryIds.Count == 0)
+        {
+            return ([], []);
+        }
+
+        string productLinesQuery =
+            "select id from product_lines where delivery_id = any(@deliveryIds) for update;";
+
+        List<int> productLineIds = connection
+            .Query<int>(productLinesQuery, new { deliveryIds }, transaction: transaction)
+            .ToList();
+
+        return (deliveryIds, productLineIds);
     }
 
     private List<DeliveryInBubble> GetDeliveriesForSync(
