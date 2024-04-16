@@ -14,6 +14,18 @@ public class DeliveryMapping : IRegister
             .AfterMapping(
                 (src, dest) =>
                 {
+                    dest.PRD_LN_1 = null;
+                    dest.PRD_LN_1_AMN = null;
+
+                    dest.PRD_LN_2 = null;
+                    dest.PRD_LN_2_AMN = null;
+                    
+                    dest.PRD_LN_3 = null;
+                    dest.PRD_LN_3_AMN = null;
+
+                    dest.PRD_LN_4 = null;
+                    dest.PRD_LN_4_AMN = null;
+                    
                     if (src.ProductLines.Count > 0)
                     {
                         var line = src.ProductLines[0];
