@@ -6,6 +6,7 @@ using ACL.Synchronizers.Product.Models;
 using ACL.Synchronizers.Product.Repositories;
 using Dapper;
 using Mapster;
+using Serilog;
 
 namespace ACL.Synchronizers.Product;
 
@@ -18,7 +19,8 @@ public class LegacyProductSynchronizer
     public LegacyProductSynchronizer(
         LegacyOutboxRepository outboxRepository,
         LegacyProductRepository productRepository,
-        LegacySynchronizationRepository syncRepository)
+        LegacySynchronizationRepository syncRepository
+    )
     {
         _outboxRepository = outboxRepository;
         _productRepository = productRepository;
@@ -48,8 +50,9 @@ public class LegacyProductSynchronizer
 
             transaction.Commit();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Log.Error(ex, "LegacyProductSynchronizer caught the exception");
             transaction.Rollback();
         }
     }
@@ -57,7 +60,7 @@ public class LegacyProductSynchronizer
     private bool IsSyncNeeded()
     {
         string query = "select is_sync_required from sync where name = 'Product'";
-        
+
         using var connection = new SqlConnection(LegacyConnectionString.Value);
         return connection.QuerySingle<bool>(query);
     }
@@ -65,7 +68,7 @@ public class LegacyProductSynchronizer
     private List<ProductInLegacy> GetUpdatedProductsFromLegacy(SqlTransaction transaction)
     {
         byte[] syncRowVersion = _syncRepository.GetRowVersionFor("Product", transaction);
-        
+
         List<ProductInLegacy> productsInLegacy = _productRepository.GetUpdatedAndResetFlags(
             transaction
         );

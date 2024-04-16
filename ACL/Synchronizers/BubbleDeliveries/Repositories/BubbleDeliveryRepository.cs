@@ -1,8 +1,8 @@
-using ACL.Synchronizers.Delivery.Models;
+using ACL.Synchronizers.BubbleDeliveries.Models;
 using Dapper;
 using Npgsql;
 
-namespace ACL.Synchronizers.Delivery.Repositories;
+namespace ACL.Synchronizers.BubbleDeliveries.Repositories;
 
 public class BubbleDeliveryRepository
 {

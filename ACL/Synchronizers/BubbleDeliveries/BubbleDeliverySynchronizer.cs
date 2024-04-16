@@ -1,13 +1,14 @@
 using ACL.ConnectionStrings;
+using ACL.Synchronizers.BubbleDeliveries.Models;
+using ACL.Synchronizers.BubbleDeliveries.Repositories;
 using ACL.Synchronizers.CommonRepositories.Outbox;
 using ACL.Synchronizers.CommonRepositories.Synchronization;
-using ACL.Synchronizers.Delivery.Models;
-using ACL.Synchronizers.Delivery.Repositories;
 using Dapper;
 using Mapster;
 using Npgsql;
+using Serilog;
 
-namespace ACL.Synchronizers.Delivery;
+namespace ACL.Synchronizers.BubbleDeliveries;
 
 public class BubbleDeliverySynchronizer
 {
@@ -51,8 +52,9 @@ public class BubbleDeliverySynchronizer
 
             transaction.Commit();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Log.Error(ex, "BubbleDeliverySynchronizer caught the exception");
             transaction.Rollback();
         }
     }

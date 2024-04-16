@@ -1,4 +1,4 @@
-namespace ACL.Synchronizers.Delivery.Models;
+namespace ACL.Synchronizers.BubbleDeliveries.Models;
 
 public class DeliveryInBubble
 {

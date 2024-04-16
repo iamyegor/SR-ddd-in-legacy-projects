@@ -2,6 +2,7 @@ using System.Reflection;
 using ACL.Extensions;
 using ACL.Synchronizers.Product.Models;
 using Dapper;
+using LegacyDeliveries = ACL.Synchronizers.LegacyDeliveries.Models;
 
 namespace ACL.Utils;
 
@@ -14,6 +15,11 @@ public static class DapperConfiguration
         foreach (var modelType in types)
         {
             if (modelType == typeof(ProductInLegacy))
+            {
+                continue;
+            }
+
+            if (modelType == typeof(LegacyDeliveries.DeliveryInLegacy))
             {
                 continue;
             }

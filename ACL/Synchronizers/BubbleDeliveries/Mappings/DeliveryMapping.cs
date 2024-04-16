@@ -1,7 +1,7 @@
-using ACL.Synchronizers.Delivery.Models;
+using ACL.Synchronizers.BubbleDeliveries.Models;
 using Mapster;
 
-namespace ACL.Mappings;
+namespace ACL.Synchronizers.BubbleDeliveries.Mappings;
 
 public class DeliveryMapping : IRegister
 {

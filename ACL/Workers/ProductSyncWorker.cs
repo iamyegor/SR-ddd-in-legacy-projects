@@ -1,4 +1,5 @@
 using ACL.Synchronizers.Product;
+using Serilog;
 
 namespace ACL.Workers;
 
@@ -13,10 +14,17 @@ public class ProductSyncWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        Console.WriteLine("Product worker started");
+        Log.Information("Product worker started");
         while (!stoppingToken.IsCancellationRequested)
         {
-            _legacyProductSynchronizer.Sync();
+            try
+            {
+                _legacyProductSynchronizer.Sync();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "ProductSyncWorker caught the exception");
+            }
 
             await Task.Delay(1000, stoppingToken);
         }
