@@ -99,6 +99,9 @@ public class BubbleDeliveryRepository
 
     private void ResetSyncFlags(List<int> deliveryIds, NpgsqlTransaction transaction)
     {
-        throw new NotImplementedException();
+        string query = "update deliveries set is_sync_needed = false where id = any(@Ids)";
+
+        NpgsqlConnection connection = transaction.Connection!;
+        connection.Execute(query, new { Ids = deliveryIds }, transaction: transaction);
     }
 }
