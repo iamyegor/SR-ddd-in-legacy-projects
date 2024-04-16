@@ -15,6 +15,8 @@ public class ApplicationContext : DbContext
     public virtual DbSet<Delivery> Deliveries => Set<Delivery>();
     public virtual DbSet<Product> Products => Set<Product>();
     public virtual DbSet<ProductLine> ProductLines => Set<ProductLine>();
+    public DbSet<Synchronization> Sync => Set<Synchronization>();
+    
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.UseNpgsql(
@@ -28,4 +30,11 @@ public class ApplicationContext : DbContext
             Assembly.GetAssembly(typeof(IEntityConfigurationAssembly))!
         );
     }
+}
+
+public class Synchronization
+{
+    public string Name { get; set; }
+    public bool IsSyncRequired { get; set; }
+    public int RowVersion { get; set; }
 }
